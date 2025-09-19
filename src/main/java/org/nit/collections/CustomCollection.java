@@ -93,4 +93,33 @@ public class CustomCollection {
         }
 
     }
+  //update an element in the array
+    public void update(int index, Object newValue) {
+    	//checking if index is valid or not
+    	if(index<0 || index>=customArray.length) {
+    		throw new ArrayIndexOutOfBoundsException("Index out of bounds");
+    	}else {
+    		customArray[index]=newValue;
+    	}
+//Helper method to display elements in the array
+    public void display() {
+        try {
+            // Check if array is null or empty
+            if (customArray == null || customArray.length == 0) {
+                System.out.println("Array is empty");
+            } else {
+                System.out.print("[");
+                for (int i = 0; i < customArray.length; i++) {
+                    System.out.print(customArray[i]);
+                    if (i < customArray.length - 1) {
+                        System.out.print(", "); 
+                    }
+                }
+                System.out.println("]");
+            }
+        } catch (Exception e) {
+            System.out.println("An error occurred while displaying the array: " + e.getMessage());
+        }
+    }
+
 }
