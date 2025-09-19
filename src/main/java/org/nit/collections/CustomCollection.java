@@ -31,5 +31,6 @@ public class CustomCollection {
         //checking if index is less than size of array
         customArray[index]=object;
     }
+    //He
 
 }
