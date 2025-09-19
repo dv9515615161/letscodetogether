@@ -28,6 +28,7 @@ public class CustomCollection {
       @param obj The object to be added to the collection.
      */
     public void add(Object object){
+        //checking if index is less than size of array
         customArray[index]=object;
     }
 
