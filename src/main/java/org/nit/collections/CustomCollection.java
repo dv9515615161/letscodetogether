@@ -30,7 +30,10 @@ public class CustomCollection {
     public void add(Object object){
         //checking if index is less than size of array
         customArray[index]=object;
+        
     }
-    //He
-
+    //Helper method to display elements in the array
+    public void display(){
+    	
+    }
 }
