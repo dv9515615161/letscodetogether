@@ -79,4 +79,18 @@ public class CustomCollection {
         }
         System.out.println("Element not found");
     }
+    //Remove element in the array by index
+    public void remove (int index){
+        if (index<0 || index>=customArray.length ){
+            System.out.println("Index out of bounds");
+            return;
+        }
+        customArray[index]=null;
+        System.out.println("Element removed at index: "+index);
+        //shifting elements to the left
+        for (int i=index;i<customArray.length-1;i++) {
+            customArray[i] = customArray[i + 1];
+        }
+
+    }
 }
