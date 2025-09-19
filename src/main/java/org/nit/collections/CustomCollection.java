@@ -29,23 +29,7 @@ public class CustomCollection {
      */
     public void add(Object object){
         //checking if index is less than size of array
-        if(index==customArray.length){
-            grow();
-        }
         customArray[index]=object;
-        index++;
-    }
-    /*
-      Grows the size of the collection by doubling its current size.
-     */
-    private void grow() {
-        int newSize= customArray.length*2;
-        Object [] newArray = new Object[newSize];
-        //copying elements from old array to new array
-        for (int i=0; i<customArray.length; i++){
-            newArray[i]=customArray[i];
-        }
-        customArray = newArray;
     }
 
 }
