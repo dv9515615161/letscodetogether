@@ -1,0 +1,211 @@
+// PriceFinder database schema.
+//
+// The database is OPTIONAL for the MVP: the app runs without DATABASE_URL and
+// degrades to an in-memory cache with no persistence. Everything here is
+// additive — search history, price history and a cross-instance cache.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProviderId {
+  blinkit
+  zepto
+  amazon
+  flipkart
+  bigbasket
+  instamart
+}
+
+/// How a provider's data was obtained. Surfaced in the UI so demo data is
+/// never presented as if it were real.
+enum DataSource {
+  live
+  demo
+}
+
+enum Availability {
+  available
+  out_of_stock
+  unknown
+}
+
+/// One row per shopping platform. Kept in the database so provider metadata
+/// (display name, logo, enablement) can later be edited without a deploy.
+model Provider {
+  id         ProviderId @id
+  name       String
+  websiteUrl String?
+  logoUrl    String?
+  enabled    Boolean    @default(true)
+  dataSource DataSource @default(demo)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  products      Product[]
+  searchResults SearchResult[]
+  priceHistory  PriceHistory[]
+}
+
+/// A product as offered by ONE provider. `matchKey` is the normalised grouping
+/// signature produced by services/productMatcher, which is what lets the same
+/// item from different stores be compared side by side.
+model Product {
+  id              String     @id @default(cuid())
+  providerId      ProviderId
+  externalId      String
+  title           String
+  normalizedTitle String
+  matchKey        String
+  brand           String?
+  description     String?
+  imageUrl        String?
+  productUrl      String?
+  quantity        Float?
+  unit            String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  provider      Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  searchResults SearchResult[]
+  priceHistory  PriceHistory[]
+
+  @@unique([providerId, externalId])
+  @@index([matchKey])
+  @@index([normalizedTitle])
+}
+
+/// One user-initiated search. Also acts as the unit of analytics ("what do
+/// people look for") without storing anything that identifies a person.
+model SearchQuery {
+  id                String   @id @default(cuid())
+  query             String
+  normalizedQuery   String
+  pincode           String?
+  latitude          Float?
+  longitude         Float?
+  providersSearched Int      @default(0)
+  productsFound     Int      @default(0)
+  lowestPrice       Float?
+  durationMs        Int?
+  cacheHit          Boolean  @default(false)
+  userId            String?
+  createdAt         DateTime @default(now())
+
+  user    User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  results SearchResult[]
+
+  @@index([normalizedQuery, pincode])
+  @@index([createdAt])
+}
+
+/// A single provider offer captured for a search, i.e. the price we showed.
+model SearchResult {
+  id                  String       @id @default(cuid())
+  searchQueryId       String
+  providerId          ProviderId
+  productId           String?
+  title               String
+  price               Float
+  originalPrice       Float?
+  currency            String       @default("INR")
+  quantity            Float?
+  unit                String?
+  pricePerUnit        Float?
+  unitBasis           String?
+  availability        Availability @default(unknown)
+  deliveryTimeMinutes Int?
+  deliveryFee         Float?
+  rating              Float?
+  reviewCount         Int?
+  productUrl          String?
+  imageUrl            String?
+  matchKey            String
+  dataSource          DataSource   @default(demo)
+  fetchedAt           DateTime     @default(now())
+
+  searchQuery SearchQuery @relation(fields: [searchQueryId], references: [id], onDelete: Cascade)
+  provider    Provider    @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  product     Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([searchQueryId])
+  @@index([matchKey])
+}
+
+/// Append-only price observations. Powers a future "tomato is up 12% this
+/// week" feature; nothing in the MVP reads from it yet.
+model PriceHistory {
+  id           String     @id @default(cuid())
+  productId    String
+  providerId   ProviderId
+  price        Float
+  pricePerUnit Float?
+  unitBasis    String?
+  currency     String     @default("INR")
+  pincode      String?
+  recordedAt   DateTime   @default(now())
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([productId, recordedAt])
+  @@index([providerId, recordedAt])
+}
+
+/// Cross-instance cache. Used when DATABASE_URL is set; otherwise the app
+/// falls back to an in-process memory cache (see services/cacheService).
+model CacheEntry {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+/// Not used by the MVP — the app requires no authentication. Present so that
+/// adding auth later is a migration, not a redesign: searches and saved
+/// baskets already carry an optional userId.
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  pincode   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  searches SearchQuery[]
+  baskets  Basket[]
+}
+
+/// Future basket-comparison feature: a named list of items whose total cost is
+/// compared across providers. The API layer already models baskets
+/// (services/basketService); this is where a saved one would live.
+model Basket {
+  id        String   @id @default(cuid())
+  name      String   @default("My basket")
+  userId    String?
+  pincode   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items BasketItem[]
+}
+
+model BasketItem {
+  id        String   @id @default(cuid())
+  basketId  String
+  query     String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  basket Basket @relation(fields: [basketId], references: [id], onDelete: Cascade)
+
+  @@index([basketId])
+}

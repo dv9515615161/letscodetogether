@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens.
+ *
+ * Tailwind v4 only reads `@theme` at the top level — an `@theme` nested inside
+ * a media query is dropped, and its values leak out unconditionally. So the
+ * light palette is declared once here, and the dark palette overrides the
+ * emitted custom properties on `:root` in a plain media query below.
+ */
+@theme {
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f3f6;
+  --color-line: #e3e6eb;
+  --color-ink: #10131a;
+  --color-ink-soft: #5a6272;
+  --color-ink-faint: #8b94a3;
+  --color-brand: #1f6feb;
+  --color-brand-strong: #1552b8;
+  --color-brand-soft: #e8f0fe;
+  --color-best: #0d8a4d;
+  --color-best-soft: #e6f6ed;
+  --color-warn: #96570a;
+  --color-warn-soft: #fdf1d6;
+  --color-danger: #c2352c;
+  --color-danger-soft: #fdeceb;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #0c0f14;
+    --color-surface: #151a22;
+    --color-surface-muted: #1d232d;
+    --color-line: #2a323e;
+    --color-ink: #f2f4f8;
+    --color-ink-soft: #a9b2c1;
+    --color-ink-faint: #78828f;
+    --color-brand: #6ea8ff;
+    --color-brand-strong: #8fc0ff;
+    --color-brand-soft: #16263f;
+    --color-best: #3ddc97;
+    --color-best-soft: #10281f;
+    --color-warn: #f0b429;
+    --color-warn-soft: #2c2310;
+    --color-danger: #ff8a80;
+    --color-danger-soft: #2c1614;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Visible focus for keyboard users on every interactive element. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
