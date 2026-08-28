@@ -7,6 +7,7 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import com.ridescore.app.data.settings.SettingsCache
 import com.ridescore.app.data.settings.SettingsRepository
 import com.ridescore.app.domain.model.ScreenAnalysis
@@ -178,15 +179,13 @@ class RideScoreAccessibilityService : AccessibilityService() {
         val packageName = currentPackage ?: return
         if (!SettingsCache.current.watches(SourceApp.fromPackage(packageName))) return
 
-        val root = rootInActiveWindow ?: return
+        // Every window the supported app owns, not just the active one: Rapido
+        // floats its offer above the map in a window of its own, so reading the
+        // active window alone can catch the map and miss the fare.
+        val roots = rootsFor(packageName)
+        if (roots.isEmpty()) return
 
-        // The active window can belong to a different app than the event did -
-        // a system dialog, a notification shade. Read it only if it is still the
-        // supported app.
-        val rootPackage = root.packageName?.toString() ?: return
-        if (rootPackage != packageName) return
-
-        val snapshot = NodeTextExtractor.extract(root, rootPackage)
+        val snapshot = NodeTextExtractor.extract(roots, packageName)
         if (snapshot.isEmpty) return
 
         // Reference assignment only - nothing is copied, allocated or stored.
@@ -197,6 +196,30 @@ class RideScoreAccessibilityService : AccessibilityService() {
             )
         }
         pipeline.submit(snapshot)
+    }
+
+    /**
+     * Window roots belonging to [packageName], and nothing else.
+     *
+     * The package is checked on every window before its content is touched, so
+     * no other app's screen is ever read.
+     */
+    private fun rootsFor(packageName: String): List<AccessibilityNodeInfo> {
+        val roots = mutableListOf<AccessibilityNodeInfo>()
+
+        rootInActiveWindow?.let { active ->
+            if (active.packageName?.toString() == packageName) roots += active
+        }
+
+        runCatching {
+            for (window in windows) {
+                val root = window.root ?: continue
+                if (root.packageName?.toString() != packageName) continue
+                if (roots.none { it == root }) roots += root
+            }
+        }.onFailure { Log.w(TAG, "Could not list windows", it) }
+
+        return roots
     }
 
     private fun onAnalysis(analysis: ScreenAnalysis) {

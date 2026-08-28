@@ -102,11 +102,17 @@ object OverlayPresenter {
     private fun journeyLine(a: RideAnalysis): String =
         "${Format.decimal(a.totalDistanceKm)} km • ${Format.minutes(a.totalTimeMinutes)}"
 
-    private fun checkReason(a: RideAnalysis): String = when {
-        a.reasons.contains(DecisionReason.MISSING_FARE) -> "Could not read fare"
-        a.reasons.contains(DecisionReason.MISSING_DISTANCE) -> "Could not read distance"
-        a.reasons.contains(DecisionReason.MISSING_TIME) -> "Could not read time"
-        else -> "Reading unclear"
+    private fun checkReason(a: RideAnalysis): String {
+        val missing = buildList {
+            if (a.reasons.contains(DecisionReason.MISSING_FARE)) add("fare")
+            if (a.reasons.contains(DecisionReason.MISSING_DISTANCE)) add("distance")
+            if (a.reasons.contains(DecisionReason.MISSING_TIME)) add("time")
+        }
+        // Naming every missing field, not just the first, is the difference
+        // between a driver knowing the app half-read the screen and thinking it
+        // only missed the price.
+        return if (missing.isEmpty()) "Reading unclear"
+        else "Could not read " + missing.joinToString(", ")
     }
 
     /** Whatever was readable, so the driver is not left with nothing. */

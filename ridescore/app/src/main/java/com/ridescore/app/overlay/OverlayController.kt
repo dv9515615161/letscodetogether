@@ -116,6 +116,7 @@ class OverlayController(private val context: Context) {
             setTextColor(accent)
         }
         primaryView?.apply {
+            maxLines = if (content.decision == Decision.CHECK) 2 else 1
             text = content.primary
             setTextColor(Color.WHITE)
             setTextSize(

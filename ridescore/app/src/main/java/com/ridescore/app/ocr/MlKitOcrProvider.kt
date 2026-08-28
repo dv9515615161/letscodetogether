@@ -64,7 +64,10 @@ class MlKitOcrProvider : OcrFallbackProvider {
             .sortedBy { it.boundingBox?.top ?: 0 }
             .map { block ->
                 TextBlock(
-                    lines = block.lines.map { it.text },
+                    // A screen capture includes RideScore's own card, which
+                    // sits on top of the offer. Reading our own output back in
+                    // as screen text would be circular, so drop it.
+                    lines = block.lines.map { it.text }.filterNot(::isOwnCardText),
                     top = block.boundingBox?.top ?: 0,
                 )
             }
@@ -82,6 +85,11 @@ class MlKitOcrProvider : OcrFallbackProvider {
         )
     }
 
+    private fun isOwnCardText(line: String): Boolean {
+        val n = line.lowercase()
+        return OWN_CARD_MARKERS.any { n.contains(it) }
+    }
+
     private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { cont ->
         addOnSuccessListener { value -> if (cont.isActive) cont.resume(value) }
         addOnFailureListener { error -> if (cont.isActive) cont.resumeWithException(error) }
@@ -89,6 +97,12 @@ class MlKitOcrProvider : OcrFallbackProvider {
     }
 
     private companion object {
+        /** Phrases that only ever appear on RideScore's own advisory card. */
+        val OWN_CARD_MARKERS = listOf(
+            "net/hr", "net/km", "could not read", "no good order", "best of ",
+            "advisory", "low confidence", "/km target",
+        )
+
         const val TAG = "RideScoreOcr"
 
         /** Never more than one screen capture per second and a bit. */

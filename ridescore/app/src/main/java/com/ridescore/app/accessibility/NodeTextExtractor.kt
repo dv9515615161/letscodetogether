@@ -28,7 +28,12 @@ import com.ridescore.app.parser.TextNormalizer
  */
 object NodeTextExtractor {
 
-    const val MAX_NODES = 500
+    /**
+     * Per window. A driver app's offer screen sits on top of a full map, and
+     * the map alone can carry hundreds of nodes, so a small budget can run out
+     * before the walk ever reaches the fare.
+     */
+    const val MAX_NODES = 2_000
     const val MAX_DEPTH = 30
     const val MAX_LINE_LENGTH = 120
 
@@ -36,22 +41,28 @@ object NodeTextExtractor {
         root: AccessibilityNodeInfo?,
         packageName: String,
         capturedAtMillis: Long = System.currentTimeMillis(),
-    ): ScreenSnapshot {
-        if (root == null) {
-            return ScreenSnapshot(
-                packageName = packageName,
-                sourceApp = SourceApp.fromPackage(packageName),
-                blocks = emptyList(),
-                allLines = emptyList(),
-                capturedAtMillis = capturedAtMillis,
-            )
-        }
+    ): ScreenSnapshot = extract(listOfNotNull(root), packageName, capturedAtMillis)
 
-        val budget = Budget(MAX_NODES)
+    /**
+     * Reads several windows as one screen.
+     *
+     * A ride offer is often not part of the app's main window: it floats above
+     * the map in a window of its own. Reading only the active window can
+     * therefore catch the map and miss the fare, so every window belonging to
+     * the supported app is walked and merged, in screen order.
+     */
+    fun extract(
+        roots: List<AccessibilityNodeInfo>,
+        packageName: String,
+        capturedAtMillis: Long = System.currentTimeMillis(),
+    ): ScreenSnapshot {
         val allLines = mutableListOf<String>()
         val cards = mutableListOf<TextBlock>()
 
-        walk(root, 0, budget, allLines, cards)
+        for (root in roots) {
+            // A budget per window, so a busy map cannot starve the offer card.
+            walk(root, 0, Budget(MAX_NODES), allLines, cards)
+        }
 
         return ScreenSnapshot(
             packageName = packageName,

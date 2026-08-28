@@ -37,12 +37,17 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
 
     override fun parse(snapshot: ScreenSnapshot): List<RideOffer> {
         if (snapshot.isEmpty) return emptyList()
-        return OfferSegmenter.blocks(snapshot).mapNotNull { block ->
-            parseBlock(block.lines, snapshot)
+        val blocks = OfferSegmenter.blocks(snapshot)
+        return blocks.mapNotNull { block ->
+            parseBlock(block.lines, snapshot, blocks.size)
         }
     }
 
-    protected open fun parseBlock(lines: List<String>, snapshot: ScreenSnapshot): RideOffer? {
+    protected open fun parseBlock(
+        lines: List<String>,
+        snapshot: ScreenSnapshot,
+        blockCount: Int = 1,
+    ): RideOffer? {
         val ocr = snapshot.textSource == TextSource.OCR
         val infos = lines.mapIndexed { i, raw -> lineInfo(i, raw, ocr) }.filter { it.text.isNotEmpty() }
         if (infos.isEmpty()) return null
@@ -52,7 +57,19 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
         var penalty = 0f
 
         // ---- fare ---------------------------------------------------------
-        val fare = resolveFare(infos, notes)
+        var fare = resolveFare(infos, notes)
+
+        // The fare is not always inside the same card as the journey - some
+        // layouts put it in a separate view, or a separate window. When there
+        // is only one offer on screen there is no ambiguity about who it
+        // belongs to, so look for it elsewhere rather than giving up.
+        if (fare.total == null && blockCount == 1) {
+            rescueFare(infos, snapshot)?.let {
+                fare = it
+                penalty += RESCUE_PENALTY
+                notes += "Fare read from elsewhere on the screen"
+            }
+        }
         penalty += fare.penalty
         if (fare.total != null) fields[OfferField.TOTAL_FARE] = fare.totalConfidence
         if (fare.base != null) fields[OfferField.BASE_FARE] = fare.totalConfidence
@@ -234,6 +251,37 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
         }
     }
 
+    /**
+     * Looks for the fare outside the offer card.
+     *
+     * Only accepts an unmistakable fare - a `₹45 + ₹18` sum, or an amount on a
+     * line that names itself as the total - so a wallet balance or a promo
+     * banner elsewhere on the screen can never be mistaken for the offer.
+     */
+    private fun rescueFare(blockInfos: List<LineInfo>, snapshot: ScreenSnapshot): FareResult? {
+        val alreadySeen = blockInfos.mapTo(HashSet()) { it.raw }
+        val ocr = snapshot.textSource == TextSource.OCR
+        val others = snapshot.allLines
+            .filterNot { it in alreadySeen }
+            .mapIndexed { i, raw -> lineInfo(i, raw, ocr) }
+            .filter { it.text.isNotEmpty() }
+        if (others.isEmpty()) return null
+
+        val sum = others
+            .firstOrNull { (it.hasCurrency || it.isTotal) && Extractors.sumExpression(it.text) != null }
+            ?.let { Extractors.sumExpression(it.text) }
+        if (sum != null) {
+            return FareResult(sum.first, sum.second, sum.first + sum.second, 0f, 0.7f)
+        }
+
+        val labelled = others.firstOrNull { it.isTotal && it.amounts.isNotEmpty() }
+            ?.amounts?.maxOrNull()
+        if (labelled != null && labelled > 0.0) {
+            return FareResult(labelled, null, labelled, 0f, 0.6f)
+        }
+        return null
+    }
+
     // ------------------------------------------------------------ text bits
 
     /**
@@ -345,6 +393,9 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
 
         const val POSITIONAL_PENALTY = 0.10f
         const val MISMATCH_PENALTY = 0.15f
+
+        /** A fare found outside the offer card is trusted, but less. */
+        const val RESCUE_PENALTY = 0.20f
         const val OCR_FACTOR = 0.9f
 
         const val LABELLED = 0.95f
