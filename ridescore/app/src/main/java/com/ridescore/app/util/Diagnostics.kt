@@ -23,6 +23,16 @@ object Diagnostics {
         val lastConfidence: Float = 0f,
         val lastUpdatedAtMillis: Long = 0,
         val overlayPermissionMissing: Boolean = false,
+        /**
+         * The text of the last supported screen, and how it was split into
+         * offer cards. Held only in memory, only for the app's own diagnostics
+         * screen, and never written to disk or sent anywhere - it is there so a
+         * driver can show a developer what their screen actually looked like
+         * when a parse went wrong.
+         */
+        val lastLines: List<String> = emptyList(),
+        val lastBlocks: List<List<String>> = emptyList(),
+        val lastOfferSummaries: List<String> = emptyList(),
     )
 
     private val _state = MutableStateFlow(State())

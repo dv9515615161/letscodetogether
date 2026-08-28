@@ -14,6 +14,7 @@ import com.ridescore.app.engine.OfferPipeline
 import com.ridescore.app.engine.RideScoreEngine
 import com.ridescore.app.ocr.MlKitOcrProvider
 import com.ridescore.app.overlay.OverlayController
+import com.ridescore.app.overlay.OverlayVisibility
 import com.ridescore.app.tts.VoiceAnnouncer
 import com.ridescore.app.util.Diagnostics
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +57,12 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private val scanRunnable = Runnable { scanNow() }
     private val hideRunnable = Runnable { overlay?.hide() }
 
+    /** All hiding goes through here, so a fresh reading always cancels a pending hide. */
+    private fun scheduleHide(delayMillis: Long) {
+        mainHandler.removeCallbacks(hideRunnable)
+        mainHandler.postDelayed(hideRunnable, delayMillis)
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
@@ -96,6 +103,12 @@ class RideScoreAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val received = event ?: return
         val packageName = received.packageName?.toString() ?: return
+
+        // The status bar, the notification shade and the keyboard sit on top of
+        // the driver app rather than replacing it. They fire window events
+        // constantly and mean nothing here.
+        if (OverlayVisibility.isTransientSystemPackage(packageName)) return
+
         val app = SourceApp.fromPackage(packageName)
         val settings = SettingsCache.current
 
@@ -110,7 +123,9 @@ class RideScoreAccessibilityService : AccessibilityService() {
         if (!supported) {
             // Not a supported driver app: the window content is never requested.
             if (received.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                mainHandler.post { overlay?.hide() }
+                // Give it a moment - the driver may be bouncing off a dialog
+                // and straight back into the offer.
+                mainHandler.post { scheduleHide(OverlayVisibility.APP_SWITCH_GRACE_MS) }
                 pipeline.clear()
             }
             return
@@ -155,6 +170,14 @@ class RideScoreAccessibilityService : AccessibilityService() {
 
         val snapshot = NodeTextExtractor.extract(root, rootPackage)
         if (snapshot.isEmpty) return
+
+        // Reference assignment only - nothing is copied, allocated or stored.
+        Diagnostics.update {
+            it.copy(
+                lastLines = snapshot.allLines,
+                lastBlocks = snapshot.blocks.map { block -> block.lines },
+            )
+        }
         pipeline.submit(snapshot)
     }
 
@@ -167,25 +190,48 @@ class RideScoreAccessibilityService : AccessibilityService() {
                 lastDecision = analysis.best?.decision?.label,
                 lastConfidence = analysis.best?.confidence ?: 0f,
                 lastUpdatedAtMillis = System.currentTimeMillis(),
+                lastOfferSummaries = analysis.ranked.map(::describe),
             )
         }
 
         mainHandler.post {
-            mainHandler.removeCallbacks(hideRunnable)
             if (analysis.ranked.isEmpty()) {
-                overlay?.hide()
+                // One unreadable frame is not evidence the offer is gone. Offer
+                // screens repaint several times a second and a repaint can be
+                // caught half-drawn, so let the card stand for a few seconds.
+                if (overlay?.isVisible == true) scheduleHide(OverlayVisibility.EMPTY_GRACE_MS)
                 return@post
             }
             if (settings.overlayEnabled) {
+                mainHandler.removeCallbacks(hideRunnable)
                 val shown = overlay?.show(analysis, settings) ?: false
                 Diagnostics.update { it.copy(overlayPermissionMissing = !shown) }
                 if (settings.overlayAutoHideMillis > 0) {
-                    mainHandler.postDelayed(hideRunnable, settings.overlayAutoHideMillis)
+                    scheduleHide(settings.overlayAutoHideMillis)
                 }
             }
         }
 
         if (settings.voiceEnabled) voice?.announce(analysis, settings)
+    }
+
+    /** One readable line per parsed offer, for the diagnostics screen. */
+    private fun describe(analysis: com.ridescore.app.domain.model.RideAnalysis): String {
+        val o = analysis.offer
+        fun money(v: Double?) = v?.let { "₹" + it.toString().removeSuffix(".0") } ?: "?"
+        fun km(v: Double?) = v?.let { "$it km" } ?: "?"
+        fun min(v: Double?) = v?.let { "${it.toString().removeSuffix(".0")} min" } ?: "?"
+        return buildString {
+            append(analysis.decision.emoji).append(' ').append(analysis.decision.label)
+            append("  fare=").append(money(o.totalFare))
+            if (o.bonusFare != null) {
+                append(" (").append(money(o.baseFare)).append(" + ").append(money(o.bonusFare)).append(')')
+            }
+            append("  pickup=").append(km(o.pickupDistanceKm))
+            append("  trip=").append(km(o.tripDistanceKm))
+            append("  time=").append(min(o.tripTimeMinutes))
+            append("  confidence=").append((analysis.confidence * 100).toInt()).append('%')
+        }
     }
 
     /** Used by the app's own home screen to preview the card. Never touches another app. */

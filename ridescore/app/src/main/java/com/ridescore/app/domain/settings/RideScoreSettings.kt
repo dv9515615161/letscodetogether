@@ -62,7 +62,7 @@ data class RideScoreSettings(
     val overlayShowDetailsInQuickMode: Boolean = true,
     val voiceEnabled: Boolean = false,
     val voiceMinIntervalMillis: Long = 3_000L,
-    val overlayAutoHideMillis: Long = 12_000L,
+    val overlayAutoHideMillis: Long = 20_000L,
 
     // ---- Sources --------------------------------------------------------
     val appMode: AppMode = AppMode.BOTH,

@@ -15,8 +15,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ridescore.app.domain.model.Decision
@@ -154,6 +161,38 @@ fun HomeScreen(
             }
         }
 
+        SectionCard(
+            title = "Last screen read",
+            subtitle = "What RideScore saw on the driver app, and how it split it into " +
+                "offer cards. Useful when the numbers look wrong. Kept in memory only - " +
+                "it is never saved or sent anywhere.",
+        ) {
+            var expanded by remember { mutableStateOf(false) }
+            val clipboard = LocalClipboardManager.current
+
+            LabelledValue("Offer cards detected", diagnostics.lastBlocks.size.toString())
+            LabelledValue("Lines read", diagnostics.lastLines.size.toString())
+
+            if (diagnostics.lastLines.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = { expanded = !expanded }) {
+                        Text(if (expanded) "Hide" else "Show")
+                    }
+                    OutlinedButton(
+                        onClick = { clipboard.setText(AnnotatedString(diagnosticsReport(diagnostics))) },
+                    ) { Text("Copy") }
+                }
+            }
+
+            if (expanded) {
+                Text(
+                    diagnosticsReport(diagnostics),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                )
+            }
+        }
+
         SectionCard(title = "Safety and privacy") {
             Text(
                 "• Advisory only. RideScore never accepts, declines, taps, swipes or " +
@@ -167,6 +206,26 @@ fun HomeScreen(
             )
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+/** The last screen, as text a driver can copy and send to whoever maintains the parsers. */
+private fun diagnosticsReport(state: Diagnostics.State): String = buildString {
+    append("app: ").append(state.lastForegroundPackage ?: "none").append('\n')
+    append("offer cards detected: ").append(state.lastBlocks.size).append('\n')
+
+    state.lastOfferSummaries.forEachIndexed { i, summary ->
+        append("parsed #").append(i + 1).append(": ").append(summary).append('\n')
+    }
+
+    if (state.lastBlocks.isEmpty()) {
+        append('\n').append("--- screen text ---").append('\n')
+        state.lastLines.forEach { append(it).append('\n') }
+    } else {
+        state.lastBlocks.forEachIndexed { i, block ->
+            append('\n').append("--- card ").append(i + 1).append(" ---").append('\n')
+            block.forEach { append(it).append('\n') }
+        }
     }
 }
 

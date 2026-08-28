@@ -59,6 +59,9 @@ class OverlayController(private val context: Context) {
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
 
+    /** True while the card is on screen. */
+    val isVisible: Boolean get() = attached
+
     /**
      * @return false when the overlay permission is missing, so the caller can
      *   tell the driver instead of failing silently.
