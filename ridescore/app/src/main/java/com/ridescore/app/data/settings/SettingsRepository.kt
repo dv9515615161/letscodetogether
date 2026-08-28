@@ -71,6 +71,7 @@ class SettingsRepository(private val context: Context) {
             voiceEnabled = this[Keys.VOICE_ON] ?: d.voiceEnabled,
             voiceMinIntervalMillis = this[Keys.VOICE_INTERVAL] ?: d.voiceMinIntervalMillis,
             overlayAutoHideMillis = this[Keys.OVERLAY_AUTO_HIDE] ?: d.overlayAutoHideMillis,
+            lockScreenNoticeEnabled = this[Keys.LOCK_SCREEN_NOTICE] ?: d.lockScreenNoticeEnabled,
             appMode = this[Keys.APP_MODE]?.let { runCatching { AppMode.valueOf(it) }.getOrNull() } ?: d.appMode,
             ocrFallbackEnabled = this[Keys.OCR_ON] ?: d.ocrFallbackEnabled,
             lowConfidenceThreshold = this[Keys.LOW_CONFIDENCE] ?: d.lowConfidenceThreshold,
@@ -101,6 +102,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.VOICE_ON] = s.voiceEnabled
         this[Keys.VOICE_INTERVAL] = s.voiceMinIntervalMillis
         this[Keys.OVERLAY_AUTO_HIDE] = s.overlayAutoHideMillis
+        this[Keys.LOCK_SCREEN_NOTICE] = s.lockScreenNoticeEnabled
         this[Keys.APP_MODE] = s.appMode.name
         this[Keys.OCR_ON] = s.ocrFallbackEnabled
         this[Keys.LOW_CONFIDENCE] = s.lowConfidenceThreshold
@@ -129,6 +131,7 @@ class SettingsRepository(private val context: Context) {
         val VOICE_ON = booleanPreferencesKey("voice_enabled")
         val VOICE_INTERVAL = longPreferencesKey("voice_min_interval")
         val OVERLAY_AUTO_HIDE = longPreferencesKey("overlay_auto_hide")
+        val LOCK_SCREEN_NOTICE = booleanPreferencesKey("lock_screen_notice")
         val APP_MODE = stringPreferencesKey("app_mode")
         val OCR_ON = booleanPreferencesKey("ocr_fallback_enabled")
         val LOW_CONFIDENCE = floatPreferencesKey("low_confidence_threshold")

@@ -6,6 +6,9 @@
     <string name="accessibility_service_summary">Reads the fare, distance and time on Rapido and Uber offer screens</string>
     <string name="accessibility_service_description">RideScore reads the text of ride offers shown by Rapido Captain and Uber Driver so it can tell you what an offer is worth per hour and per kilometre.\n\nIt only reads. It never accepts, declines, taps, swipes or scrolls anything for you, and it never reads any other app. Nothing it reads leaves your phone.</string>
 
+    <string name="decision_channel_name">Offer verdict</string>
+    <string name="decision_channel_description">Shows the verdict when the floating card cannot be drawn, such as on the lock screen</string>
+
     <string name="ocr_channel_name">Screen reading</string>
     <string name="ocr_channel_description">Shown while the optional OCR fallback is switched on</string>
     <string name="ocr_notification_title">RideScore OCR fallback</string>

@@ -63,6 +63,11 @@ data class RideScoreSettings(
     val voiceEnabled: Boolean = false,
     val voiceMinIntervalMillis: Long = 3_000L,
     val overlayAutoHideMillis: Long = 20_000L,
+    /**
+     * Show the verdict as a notification when the card cannot be drawn - which
+     * on the lock screen is always, for every app.
+     */
+    val lockScreenNoticeEnabled: Boolean = true,
 
     // ---- Sources --------------------------------------------------------
     val appMode: AppMode = AppMode.BOTH,

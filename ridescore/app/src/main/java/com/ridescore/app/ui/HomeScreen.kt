@@ -161,10 +161,10 @@ fun HomeScreen(
             }
             if (diagnostics.overlayBlockedByLockScreen && !settings.voiceEnabled) {
                 Text(
-                    "That offer arrived while the phone was locked. Rapido can show " +
-                        "an offer over the lock screen, but Android does not let any " +
-                        "app draw a floating card there - so the card cannot appear. " +
-                        "Turn on Voice in Settings to hear the verdict instead.",
+                    "That offer arrived while the phone was locked. Android does not " +
+                        "let any app draw a floating card over the lock screen, so the " +
+                        "verdict goes out as a notification instead - allow notifications " +
+                        "above. Turning on Voice covers it without looking at all.",
                     color = MaybeAmber,
                     style = MaterialTheme.typography.bodySmall,
                 )

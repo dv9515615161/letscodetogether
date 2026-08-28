@@ -66,7 +66,14 @@ object OverlayPresenter {
         val primary = if (quick) Format.perHour(best.netPerHour) else Format.rupeesRounded(best.grossEarning)
 
         val details = if (quick) {
-            if (settings.overlayShowDetailsInQuickMode) listOf(journeyLine(best)) else emptyList()
+            buildList {
+                if (settings.overlayShowDetailsInQuickMode) add(journeyLine(best))
+                // Without this, a quick-mode MAYBE gives the driver no idea
+                // which of the two rules it fell short on.
+                if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
+                    add("${Format.rupees2(best.netPerKm)}/km · under ${Format.rupeesRounded(settings.minNetPerKm)}")
+                }
+            }
         } else {
             buildList {
                 add(journeyLine(best))

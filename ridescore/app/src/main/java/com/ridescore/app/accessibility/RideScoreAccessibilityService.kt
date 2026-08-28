@@ -15,6 +15,7 @@ import com.ridescore.app.domain.model.SourceApp
 import com.ridescore.app.engine.OfferPipeline
 import com.ridescore.app.engine.RideScoreEngine
 import com.ridescore.app.ocr.MlKitOcrProvider
+import com.ridescore.app.overlay.DecisionNotifier
 import com.ridescore.app.overlay.OverlayController
 import com.ridescore.app.overlay.OverlayVisibility
 import com.ridescore.app.tts.VoiceAnnouncer
@@ -50,6 +51,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var pipeline: OfferPipeline
     private var overlay: OverlayController? = null
+    private var notifier: DecisionNotifier? = null
     private var voice: VoiceAnnouncer? = null
 
     private val keyguardManager: KeyguardManager? by lazy {
@@ -94,6 +96,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
         pipeline.start()
 
         overlay = OverlayController(this)
+        notifier = DecisionNotifier(applicationContext)
         voice = VoiceAnnouncer(applicationContext)
 
         scope.launch {
@@ -255,6 +258,13 @@ class RideScoreAccessibilityService : AccessibilityService() {
                         overlayBlockedByLockScreen = locked,
                     )
                 }
+
+                // The card cannot reach the lock screen. A notification can.
+                if (locked && settings.lockScreenNoticeEnabled) {
+                    notifier?.notify(analysis, settings)
+                } else if (!locked) {
+                    notifier?.cancel()
+                }
                 if (settings.overlayAutoHideMillis > 0) {
                     scheduleHide(settings.overlayAutoHideMillis)
                 }
@@ -312,6 +322,8 @@ class RideScoreAccessibilityService : AccessibilityService() {
         pipeline.stop()
         overlay?.destroy()
         overlay = null
+        notifier?.cancel()
+        notifier = null
         voice?.shutdown()
         voice = null
         scope.cancel()

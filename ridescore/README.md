@@ -109,8 +109,18 @@ activities may declare `showWhenLocked`. A floating overlay may not: Android
 hides overlay windows behind the keyguard, for every app, with no opt-in.
 
 So on the lock screen RideScore still reads the offer and still scores it, but
-the card cannot be drawn. Turn **Voice** on in Settings and the verdict is
-spoken instead, which is the safer way to take it on a bike anyway.
+the card cannot be drawn. Two things do get through, and both are on by default
+or one switch away:
+
+- **A notification.** The verdict is posted as a silent, high-priority
+  notification whenever the card cannot be drawn - the one channel Android does
+  let through to the lock screen. Allow notifications on the Home tab, and keep
+  *Notify on the lock screen* on in Settings.
+- **Voice.** Turn it on in Settings and the verdict is spoken, which is the
+  safer way to take it on a bike anyway.
+
+RideScore deliberately does not use a full-screen intent to force itself in
+front of the offer. That would cover the screen the driver is trying to read.
 
 ### Everything comes out as MAYBE
 

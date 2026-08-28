@@ -140,6 +140,12 @@ fun SettingsScreen(
             NumberField("Hide the card after", settings.overlayAutoHideMillis / 1000.0, "seconds", 0) { v ->
                 onChange { it.copy(overlayAutoHideMillis = (v * 1000).toLong()) }
             }
+            SwitchRow(
+                label = "Notify on the lock screen",
+                checked = settings.lockScreenNoticeEnabled,
+                description = "Android hides floating cards behind the lock screen, for every " +
+                    "app. A silent notification gets the verdict through instead.",
+            ) { on -> onChange { it.copy(lockScreenNoticeEnabled = on) } }
             Text(
                 "Tap the card to expand it, drag it anywhere. It never covers the " +
                     "Accept button, and it never taps anything for you.",
