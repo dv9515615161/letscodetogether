@@ -11,9 +11,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.ridescore.app.data.log.LogStats
 import com.ridescore.app.domain.settings.AppMode
 import com.ridescore.app.domain.settings.OverlayMode
 import com.ridescore.app.domain.settings.RideScoreSettings
@@ -30,6 +32,9 @@ fun SettingsScreen(
     onReset: () -> Unit,
     onPreviewVoice: () -> Unit,
     onOcrToggle: (Boolean) -> Unit,
+    logStats: LogStats,
+    onShareLog: () -> Unit,
+    onClearLog: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -195,6 +200,41 @@ fun SettingsScreen(
         ) {
             SwitchRow("Read the screen with OCR when text is unavailable", settings.ocrFallbackEnabled) { on ->
                 onOcrToggle(on)
+            }
+        }
+
+        SectionCard(
+            title = "Ride log",
+            subtitle = "Writes every offer it sees to a spreadsheet file on this phone - " +
+                "fare, distance, time, rates, decision, and the time of day. Nothing is " +
+                "uploaded; the file goes nowhere until you share it yourself.",
+        ) {
+            SwitchRow(
+                label = "Keep a log of offers",
+                checked = settings.offerLogEnabled,
+                description = "The only thing RideScore writes to disk.",
+            ) { on -> onChange { it.copy(offerLogEnabled = on) } }
+
+            if (logStats.isEmpty) {
+                Text(
+                    if (settings.offerLogEnabled) "No offers logged yet." else "Logging is off.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                LabelledValue("Offers logged", logStats.rows.toString())
+                LabelledValue("File size", "${logStats.bytes / 1024} KB")
+                logStats.firstEntry?.let { LabelledValue("First", it) }
+                logStats.lastEntry?.let { LabelledValue("Latest", it) }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onShareLog, enabled = !logStats.isEmpty) {
+                    Text("Export")
+                }
+                OutlinedButton(onClick = onClearLog, enabled = !logStats.isEmpty) {
+                    Text("Delete log")
+                }
             }
         }
 

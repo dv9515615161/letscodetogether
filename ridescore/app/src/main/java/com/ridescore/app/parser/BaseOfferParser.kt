@@ -297,7 +297,7 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
 
             val next = infos.getOrNull(idx + 1) ?: continue
             val candidate = next.raw.trim()
-            if (next.label == Label.NONE && !next.hasDigits && isPlaceLike(candidate)) return candidate
+            if (next.label == Label.NONE && isPlaceLike(candidate)) return candidate
         }
         return null
     }
@@ -315,13 +315,26 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
             .trim().ifEmpty { null }
     }
 
+    /**
+     * Whether a line reads like an address rather than a measurement.
+     *
+     * Digits cannot disqualify it: a real Indian address is full of them -
+     * "Kukatpally - 24-230, Kukatpally House Phase 1, Balanagar, 500072" has a
+     * house number and a PIN code. What disqualifies a line is carrying a
+     * distance, a duration or a fare, or being mostly digits with no words.
+     */
     private fun isPlaceLike(text: String): Boolean {
-        if (text.length !in 3..60) return false
-        if (text.any { it.isDigit() }) return false
+        if (text.length !in 3..100) return false
         if (text.contains('₹')) return false
-        val n = text.lowercase()
-        if (Keywords.containsAny(n, Keywords.ACTION_WORDS)) return false
-        return text.any { it.isLetter() }
+
+        val normalized = TextNormalizer.normalize(text)
+        if (Extractors.amounts(normalized).isNotEmpty()) return false
+        if (Extractors.distancesKm(normalized).isNotEmpty()) return false
+        if (Extractors.durationsMinutes(normalized).isNotEmpty()) return false
+        if (Keywords.containsAny(normalized, Keywords.ACTION_WORDS)) return false
+
+        val letters = text.count { it.isLetter() }
+        return letters >= 3 && letters > text.count { it.isDigit() }
     }
 
     private fun rideType(infos: List<LineInfo>): String? {

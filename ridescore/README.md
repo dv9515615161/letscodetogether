@@ -364,9 +364,14 @@ Target: the card is up as soon as the offer is, and a stale offer is never shown
   engine is a few dozen lines of arithmetic and comparisons.
 - Screenshots are never stored — a captured frame is converted, read, and
   recycled in the same function.
-- Screen text never leaves the process; it is not logged.
-- Settings live in a local DataStore file. That is the only thing written to
-  disk.
+- Screen text never leaves the process.
+- Settings live in a local DataStore file.
+- **The ride log, when the driver switches it on, is the only other thing
+  written to disk.** It is off by default. It lives in the app's private
+  storage, which no other app can read, it is capped at 2 MB and trimmed to the
+  most recent rows after that, and it leaves the phone only when the driver
+  shares it themselves through Android's share sheet. Nothing uploads it, and
+  it can be deleted from Settings at any time.
 
 ---
 
@@ -403,6 +408,40 @@ cd ridescore
 | Decision thresholds | `DecisionEngineTest` |
 
 ---
+
+## The ride log
+
+Switch on **Settings ▸ Ride log ▸ Keep a log of offers** and every offer
+RideScore sees is appended to `ride-log.csv` in the app's private storage. Tap
+**Export** to send it anywhere - email, Drive, a chat - and open it in any
+spreadsheet.
+
+One row per offer, with `screen_id` grouping the offers that appeared together
+and `rank` recording how they were ordered:
+
+| | |
+|---|---|
+| When | `logged_at`, `date`, `time`, `hour`, `weekday` |
+| Offer | `app`, `ride_type`, `base_fare`, `bonus_fare`, `total_fare` |
+| Journey | `pickup_km`, `trip_km`, `total_km`, `pickup_min`, `trip_min`, `total_min` |
+| Money | `fuel_cost`, `maintenance_cost`, `platform_fee`, `net_earning` |
+| Rates | `gross_per_hour`, `net_per_hour`, `gross_per_km`, `net_per_km` |
+| Verdict | `decision`, `confidence`, `offers_on_screen`, `rank` |
+| Where | `pickup_location`, `destination` |
+| Assumptions | `mileage_kmpl`, `petrol_price`, `accept_per_hour`, `min_net_per_km` |
+
+Every row carries the settings that were in force when it was written, because
+a row whose mileage and petrol price are unknown stops meaning anything the
+moment those change. A field that could not be read is left **empty**, never
+zero - so a blank fare in the log is a failed read, not a free ride.
+
+The identical offer seen again within five minutes is the same offer, not a new
+one, and is not written twice.
+
+This is what makes the questions worth asking answerable: which hours actually
+pay, whether the ₹/km floor is set somewhere realistic for your city, which
+destinations lead to a good next ride, and how often RideScore's advice matched
+what the shift was really worth.
 
 ## Adding Ola
 

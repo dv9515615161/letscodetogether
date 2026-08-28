@@ -78,6 +78,12 @@ data class RideScoreSettings(
      */
     val ocrFallbackEnabled: Boolean = false,
 
+    /**
+     * Keep a local CSV of every offer seen, for looking at patterns later.
+     * Off by default: it is the only thing RideScore writes to disk.
+     */
+    val offerLogEnabled: Boolean = false,
+
     // ---- Confidence -----------------------------------------------------
     /** Below this, a result is never shown as ACCEPT. */
     val lowConfidenceThreshold: Float = 0.75f,

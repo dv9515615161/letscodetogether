@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +21,9 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +44,7 @@ import com.ridescore.app.ui.SettingsScreen
 import com.ridescore.app.ui.SettingsViewModel
 import com.ridescore.app.ui.theme.RideScoreTheme
 import com.ridescore.app.util.Diagnostics
+import kotlinx.coroutines.launch
 
 /**
  * The app's own UI: permissions, settings, and a sample offer to try.
@@ -85,6 +89,10 @@ class MainActivity : ComponentActivity() {
                 val diagnostics by Diagnostics.state.collectAsState()
                 var tab by remember { mutableIntStateOf(0) }
                 var sample by remember { mutableStateOf<ScreenAnalysis?>(null) }
+                val logStats by viewModel.logStats.collectAsState()
+                val scope = rememberCoroutineScope()
+
+                LaunchedEffect(tab, settings.offerLogEnabled) { viewModel.refreshLogStats() }
 
                 RideScoreScaffold(
                     tab = tab,
@@ -107,6 +115,22 @@ class MainActivity : ComponentActivity() {
                             modifier = modifier,
                         )
                         else -> SettingsScreen(
+                            logStats = logStats,
+                            onShareLog = {
+                                scope.launch {
+                                    val intent = viewModel.shareLogIntent()
+                                    if (intent == null) {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "Nothing logged yet",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    } else {
+                                        startActivity(Intent.createChooser(intent, "Send ride log"))
+                                    }
+                                }
+                            },
+                            onClearLog = { viewModel.clearLog() },
                             settings = settings,
                             onChange = { transform -> viewModel.update(transform) },
                             onReset = { viewModel.resetToDefaults() },

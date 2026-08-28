@@ -50,6 +50,18 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!-- Lets the driver share their own ride log out through the share
+             sheet. Grants read access to that one file, for that one action. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <service
             android:name=".ocr.ScreenCaptureService"
             android:exported="false"

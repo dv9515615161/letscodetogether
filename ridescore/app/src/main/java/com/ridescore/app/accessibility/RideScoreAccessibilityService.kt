@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.ridescore.app.data.log.OfferLogger
 import com.ridescore.app.data.settings.SettingsCache
 import com.ridescore.app.data.settings.SettingsRepository
 import com.ridescore.app.domain.model.ScreenAnalysis
@@ -52,6 +53,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private lateinit var pipeline: OfferPipeline
     private var overlay: OverlayController? = null
     private var notifier: DecisionNotifier? = null
+    private var offerLog: OfferLogger? = null
     private var voice: VoiceAnnouncer? = null
 
     private val keyguardManager: KeyguardManager? by lazy {
@@ -97,6 +99,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
 
         overlay = OverlayController(this)
         notifier = DecisionNotifier(applicationContext)
+        offerLog = OfferLogger(applicationContext)
         voice = VoiceAnnouncer(applicationContext)
 
         scope.launch {
@@ -271,6 +274,9 @@ class RideScoreAccessibilityService : AccessibilityService() {
             }
         }
 
+        // Written on the analysis thread, never on the main one.
+        if (settings.offerLogEnabled) offerLog?.log(analysis, settings)
+
         if (settings.voiceEnabled) voice?.announce(analysis, settings)
     }
 
@@ -324,6 +330,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
         overlay = null
         notifier?.cancel()
         notifier = null
+        offerLog = null
         voice?.shutdown()
         voice = null
         scope.cancel()
