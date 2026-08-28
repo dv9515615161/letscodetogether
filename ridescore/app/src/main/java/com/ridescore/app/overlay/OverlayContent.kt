@@ -1,0 +1,113 @@
+package com.ridescore.app.overlay
+
+import com.ridescore.app.domain.model.Decision
+import com.ridescore.app.domain.model.DecisionReason
+import com.ridescore.app.domain.model.RideAnalysis
+import com.ridescore.app.domain.model.ScreenAnalysis
+import com.ridescore.app.domain.settings.OverlayMode
+import com.ridescore.app.domain.settings.RideScoreSettings
+import com.ridescore.app.util.Format
+
+/**
+ * Exactly what the floating card says.
+ *
+ * Pure data, no Android types, so the wording and the numbers on the card are
+ * unit-tested rather than eyeballed on a phone.
+ *
+ * Quick mode:            Detailed mode:
+ * ```
+ * 🟢 ACCEPT              🟢 ACCEPT
+ * ₹180/hr                ₹60
+ * 7.7 km • 19 min        7.7 km • 19 min
+ *                        ₹112 net/hr
+ *                        ₹4.59 net/km
+ * ```
+ */
+data class OverlayContent(
+    val header: String,
+    val primary: String,
+    val detailLines: List<String>,
+    val otherOffers: List<String>,
+    val decision: Decision,
+    val lowConfidence: Boolean,
+    val footer: String? = null,
+)
+
+object OverlayPresenter {
+
+    const val MAX_RANKED_SHOWN = 3
+    private const val ADVISORY = "Advisory · you decide"
+
+    fun present(analysis: ScreenAnalysis, settings: RideScoreSettings): OverlayContent? {
+        val best = analysis.best ?: return null
+        val quick = settings.overlayMode == OverlayMode.QUICK
+        val lowConfidence = best.reasons.contains(DecisionReason.LOW_CONFIDENCE_CAPPED) ||
+            (best.decision != Decision.CHECK && best.confidence < settings.lowConfidenceThreshold)
+
+        if (best.decision == Decision.CHECK) {
+            return OverlayContent(
+                header = "${Decision.CHECK.emoji} CHECK",
+                primary = checkReason(best),
+                detailLines = if (quick) emptyList() else partialFacts(best),
+                otherOffers = emptyList(),
+                decision = Decision.CHECK,
+                lowConfidence = true,
+                footer = if (quick) null else ADVISORY,
+            )
+        }
+
+        val header = when {
+            analysis.noGoodOrder && analysis.hasMultipleOffers -> "${Decision.REJECT.emoji} NO GOOD ORDER"
+            analysis.hasMultipleOffers -> "${best.decision.emoji} BEST OF ${analysis.ranked.size}"
+            lowConfidence -> "${Decision.MAYBE.emoji} LOW CONFIDENCE"
+            else -> "${best.decision.emoji} ${best.decision.label}"
+        }
+
+        val primary = if (quick) Format.perHour(best.netPerHour) else Format.rupeesRounded(best.grossEarning)
+
+        val details = if (quick) {
+            if (settings.overlayShowDetailsInQuickMode) listOf(journeyLine(best)) else emptyList()
+        } else {
+            buildList {
+                add(journeyLine(best))
+                add("${Format.rupeesRounded(best.netPerHour)} net/hr")
+                add("${Format.rupees2(best.netPerKm)} net/km")
+                best.offer.destination?.let { add("→ $it") }
+            }
+        }
+
+        val others = analysis.ranked.drop(1).take(MAX_RANKED_SHOWN - 1).map { other ->
+            "${other.decision.emoji} ${Format.rupeesRounded(other.grossEarning)} · " +
+                "${Format.decimal(other.totalDistanceKm)} km · " +
+                "${Format.minutes(other.totalTimeMinutes)} · " +
+                "${Format.rupeesRounded(other.netPerHour)}/hr"
+        }
+
+        return OverlayContent(
+            header = header,
+            primary = primary,
+            detailLines = details,
+            otherOffers = others,
+            decision = best.decision,
+            lowConfidence = lowConfidence,
+            footer = if (quick) null else ADVISORY,
+        )
+    }
+
+    private fun journeyLine(a: RideAnalysis): String =
+        "${Format.decimal(a.totalDistanceKm)} km • ${Format.minutes(a.totalTimeMinutes)}"
+
+    private fun checkReason(a: RideAnalysis): String = when {
+        a.reasons.contains(DecisionReason.MISSING_FARE) -> "Could not read fare"
+        a.reasons.contains(DecisionReason.MISSING_DISTANCE) -> "Could not read distance"
+        a.reasons.contains(DecisionReason.MISSING_TIME) -> "Could not read time"
+        else -> "Reading unclear"
+    }
+
+    /** Whatever was readable, so the driver is not left with nothing. */
+    private fun partialFacts(a: RideAnalysis): List<String> = buildList {
+        if (a.grossEarning > 0.0) add(Format.rupeesRounded(a.grossEarning))
+        if (a.totalDistanceKm > 0.0 && a.totalTimeMinutes > 0.0) add(journeyLine(a))
+        else if (a.totalDistanceKm > 0.0) add(Format.km(a.totalDistanceKm))
+    }
+}

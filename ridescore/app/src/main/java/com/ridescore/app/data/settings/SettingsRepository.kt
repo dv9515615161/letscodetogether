@@ -1,0 +1,163 @@
+package com.ridescore.app.data.settings
+
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.ridescore.app.domain.settings.AppMode
+import com.ridescore.app.domain.settings.OverlayMode
+import com.ridescore.app.domain.settings.RideScoreSettings
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
+import java.io.IOException
+
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "ridescore_settings")
+
+/**
+ * Persists the driver's settings.
+ *
+ * Everything lives in a local DataStore file. Nothing is uploaded, and there is
+ * no account, no sync and no analytics.
+ *
+ * The accessibility service cannot suspend while an offer is on screen, so the
+ * latest values are also mirrored into a plain volatile field
+ * ([SettingsCache]) that any thread can read in nanoseconds.
+ */
+class SettingsRepository(private val context: Context) {
+
+    val settings: Flow<RideScoreSettings> = context.dataStore.data
+        .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
+        .map { prefs -> prefs.toSettings().also { SettingsCache.update(it) } }
+
+    suspend fun update(transform: (RideScoreSettings) -> RideScoreSettings) {
+        context.dataStore.edit { prefs ->
+            val updated = transform(prefs.toSettings()).sanitised()
+            prefs.write(updated)
+            SettingsCache.update(updated)
+        }
+    }
+
+    suspend fun resetToDefaults() = update { RideScoreSettings.DEFAULT }
+
+    private fun Preferences.toSettings(): RideScoreSettings {
+        val d = RideScoreSettings.DEFAULT
+        return RideScoreSettings(
+            vehicleName = this[Keys.VEHICLE] ?: d.vehicleName,
+            mileageKmPerLitre = this[Keys.MILEAGE] ?: d.mileageKmPerLitre,
+            petrolPricePerLitre = this[Keys.PETROL] ?: d.petrolPricePerLitre,
+            acceptNetPerHour = this[Keys.ACCEPT_PER_HOUR] ?: d.acceptNetPerHour,
+            maybeNetPerHour = this[Keys.MAYBE_PER_HOUR] ?: d.maybeNetPerHour,
+            minNetPerKm = this[Keys.MIN_PER_KM] ?: d.minNetPerKm,
+            requireBothMetrics = this[Keys.REQUIRE_BOTH] ?: d.requireBothMetrics,
+            pickupSpeedKmph = this[Keys.PICKUP_SPEED] ?: d.pickupSpeedKmph,
+            includePickupDistance = this[Keys.INCLUDE_PICKUP_KM] ?: d.includePickupDistance,
+            includePickupTime = this[Keys.INCLUDE_PICKUP_MIN] ?: d.includePickupTime,
+            maintenanceEnabled = this[Keys.MAINTENANCE_ON] ?: d.maintenanceEnabled,
+            maintenancePerKm = this[Keys.MAINTENANCE_PER_KM] ?: d.maintenancePerKm,
+            platformFeeEnabled = this[Keys.PLATFORM_FEE_ON] ?: d.platformFeeEnabled,
+            platformFeePercent = this[Keys.PLATFORM_FEE_PCT] ?: d.platformFeePercent,
+            overlayEnabled = this[Keys.OVERLAY_ON] ?: d.overlayEnabled,
+            overlayMode = this[Keys.OVERLAY_MODE]?.let { runCatching { OverlayMode.valueOf(it) }.getOrNull() }
+                ?: d.overlayMode,
+            overlayShowDetailsInQuickMode = this[Keys.QUICK_DETAILS] ?: d.overlayShowDetailsInQuickMode,
+            voiceEnabled = this[Keys.VOICE_ON] ?: d.voiceEnabled,
+            voiceMinIntervalMillis = this[Keys.VOICE_INTERVAL] ?: d.voiceMinIntervalMillis,
+            overlayAutoHideMillis = this[Keys.OVERLAY_AUTO_HIDE] ?: d.overlayAutoHideMillis,
+            appMode = this[Keys.APP_MODE]?.let { runCatching { AppMode.valueOf(it) }.getOrNull() } ?: d.appMode,
+            ocrFallbackEnabled = this[Keys.OCR_ON] ?: d.ocrFallbackEnabled,
+            lowConfidenceThreshold = this[Keys.LOW_CONFIDENCE] ?: d.lowConfidenceThreshold,
+            minUsableConfidence = this[Keys.MIN_CONFIDENCE] ?: d.minUsableConfidence,
+            preferredDestinations = this[Keys.PREFERRED_DESTINATIONS]
+                ?.split('\n')?.map { it.trim() }?.filter { it.isNotEmpty() } ?: d.preferredDestinations,
+        )
+    }
+
+    private fun androidx.datastore.preferences.core.MutablePreferences.write(s: RideScoreSettings) {
+        this[Keys.VEHICLE] = s.vehicleName
+        this[Keys.MILEAGE] = s.mileageKmPerLitre
+        this[Keys.PETROL] = s.petrolPricePerLitre
+        this[Keys.ACCEPT_PER_HOUR] = s.acceptNetPerHour
+        this[Keys.MAYBE_PER_HOUR] = s.maybeNetPerHour
+        this[Keys.MIN_PER_KM] = s.minNetPerKm
+        this[Keys.REQUIRE_BOTH] = s.requireBothMetrics
+        this[Keys.PICKUP_SPEED] = s.pickupSpeedKmph
+        this[Keys.INCLUDE_PICKUP_KM] = s.includePickupDistance
+        this[Keys.INCLUDE_PICKUP_MIN] = s.includePickupTime
+        this[Keys.MAINTENANCE_ON] = s.maintenanceEnabled
+        this[Keys.MAINTENANCE_PER_KM] = s.maintenancePerKm
+        this[Keys.PLATFORM_FEE_ON] = s.platformFeeEnabled
+        this[Keys.PLATFORM_FEE_PCT] = s.platformFeePercent
+        this[Keys.OVERLAY_ON] = s.overlayEnabled
+        this[Keys.OVERLAY_MODE] = s.overlayMode.name
+        this[Keys.QUICK_DETAILS] = s.overlayShowDetailsInQuickMode
+        this[Keys.VOICE_ON] = s.voiceEnabled
+        this[Keys.VOICE_INTERVAL] = s.voiceMinIntervalMillis
+        this[Keys.OVERLAY_AUTO_HIDE] = s.overlayAutoHideMillis
+        this[Keys.APP_MODE] = s.appMode.name
+        this[Keys.OCR_ON] = s.ocrFallbackEnabled
+        this[Keys.LOW_CONFIDENCE] = s.lowConfidenceThreshold
+        this[Keys.MIN_CONFIDENCE] = s.minUsableConfidence
+        this[Keys.PREFERRED_DESTINATIONS] = s.preferredDestinations.joinToString("\n")
+    }
+
+    private object Keys {
+        val VEHICLE = stringPreferencesKey("vehicle")
+        val MILEAGE = doublePreferencesKey("mileage_kmpl")
+        val PETROL = doublePreferencesKey("petrol_price")
+        val ACCEPT_PER_HOUR = doublePreferencesKey("accept_net_per_hour")
+        val MAYBE_PER_HOUR = doublePreferencesKey("maybe_net_per_hour")
+        val MIN_PER_KM = doublePreferencesKey("min_net_per_km")
+        val REQUIRE_BOTH = booleanPreferencesKey("require_both_metrics")
+        val PICKUP_SPEED = doublePreferencesKey("pickup_speed_kmph")
+        val INCLUDE_PICKUP_KM = booleanPreferencesKey("include_pickup_distance")
+        val INCLUDE_PICKUP_MIN = booleanPreferencesKey("include_pickup_time")
+        val MAINTENANCE_ON = booleanPreferencesKey("maintenance_enabled")
+        val MAINTENANCE_PER_KM = doublePreferencesKey("maintenance_per_km")
+        val PLATFORM_FEE_ON = booleanPreferencesKey("platform_fee_enabled")
+        val PLATFORM_FEE_PCT = doublePreferencesKey("platform_fee_percent")
+        val OVERLAY_ON = booleanPreferencesKey("overlay_enabled")
+        val OVERLAY_MODE = stringPreferencesKey("overlay_mode")
+        val QUICK_DETAILS = booleanPreferencesKey("quick_mode_details")
+        val VOICE_ON = booleanPreferencesKey("voice_enabled")
+        val VOICE_INTERVAL = longPreferencesKey("voice_min_interval")
+        val OVERLAY_AUTO_HIDE = longPreferencesKey("overlay_auto_hide")
+        val APP_MODE = stringPreferencesKey("app_mode")
+        val OCR_ON = booleanPreferencesKey("ocr_fallback_enabled")
+        val LOW_CONFIDENCE = floatPreferencesKey("low_confidence_threshold")
+        val MIN_CONFIDENCE = floatPreferencesKey("min_usable_confidence")
+        val PREFERRED_DESTINATIONS = stringPreferencesKey("preferred_destinations")
+    }
+}
+
+/**
+ * The newest settings, readable without suspending.
+ *
+ * The accessibility service reads this on every offer; a DataStore read there
+ * would add milliseconds to the one path that has to be instant.
+ */
+object SettingsCache {
+
+    @Volatile
+    var current: RideScoreSettings = RideScoreSettings.DEFAULT
+        private set
+
+    /** Bumped on every change so caches keyed on settings can be dropped. */
+    @Volatile
+    var version: Long = 0L
+        private set
+
+    fun update(settings: RideScoreSettings) {
+        if (settings != current) {
+            current = settings
+            version += 1
+        }
+    }
+}

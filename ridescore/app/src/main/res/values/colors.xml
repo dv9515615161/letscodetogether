@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#101418</color>
+    <color name="accept_green">#1E9E52</color>
+    <color name="maybe_amber">#D79A00</color>
+    <color name="reject_red">#D64545</color>
+</resources>
