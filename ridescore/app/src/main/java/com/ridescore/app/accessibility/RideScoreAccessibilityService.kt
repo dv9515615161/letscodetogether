@@ -1,6 +1,7 @@
 package com.ridescore.app.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.app.KeyguardManager
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -50,11 +51,25 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private var overlay: OverlayController? = null
     private var voice: VoiceAnnouncer? = null
 
+    private val keyguardManager: KeyguardManager? by lazy {
+        getSystemService(KeyguardManager::class.java)
+    }
+
+    /**
+     * Android does not let any app draw a floating window above the lock
+     * screen. Rapido can show its offer there because it is an activity, which
+     * is allowed to; an overlay is not. So on the lock screen the reading and
+     * the voice still work, and only the card is unavailable.
+     */
+    private val isLocked: Boolean get() = keyguardManager?.isKeyguardLocked == true
+
     private var lastScanUptime = 0L
     private var currentPackage: String? = null
     private var settingsVersion = -1L
 
-    private val scanRunnable = Runnable { scanNow() }
+    private val scanRunnable = Runnable {
+        runCatching { scanNow() }.onFailure { Log.w(TAG, "Screen read failed", it) }
+    }
     private val hideRunnable = Runnable { overlay?.hide() }
 
     /** All hiding goes through here, so a fresh reading always cancels a pending hide. */
@@ -92,7 +107,10 @@ class RideScoreAccessibilityService : AccessibilityService() {
 
         scope.launch {
             pipeline.results.filterNotNull().collect { result ->
-                onAnalysis(result.analysis)
+                // Same reasoning as the pipeline worker: a failure while
+                // presenting one result must not end the collector.
+                runCatching { onAnalysis(result.analysis) }
+                    .onFailure { Log.w(TAG, "Could not present the analysis", it) }
             }
         }
 
@@ -204,8 +222,16 @@ class RideScoreAccessibilityService : AccessibilityService() {
             }
             if (settings.overlayEnabled) {
                 mainHandler.removeCallbacks(hideRunnable)
+                val locked = isLocked
+                // Still attempted when locked: a few ROMs allow it, and it
+                // costs nothing when they do not.
                 val shown = overlay?.show(analysis, settings) ?: false
-                Diagnostics.update { it.copy(overlayPermissionMissing = !shown) }
+                Diagnostics.update {
+                    it.copy(
+                        overlayPermissionMissing = !shown && !locked,
+                        overlayBlockedByLockScreen = locked,
+                    )
+                }
                 if (settings.overlayAutoHideMillis > 0) {
                     scheduleHide(settings.overlayAutoHideMillis)
                 }

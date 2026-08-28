@@ -3,6 +3,7 @@ package com.ridescore.app.engine
 import com.ridescore.app.domain.model.ScreenAnalysis
 import com.ridescore.app.domain.model.ScreenSnapshot
 import com.ridescore.app.domain.settings.RideScoreSettings
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -25,6 +26,7 @@ data class PipelineStats(
     val skippedDuplicate: Long = 0,
     val servedFromCache: Long = 0,
     val ocrPasses: Long = 0,
+    val errors: Long = 0,
 )
 
 /**
@@ -72,10 +74,26 @@ class OfferPipeline(
         if (worker?.isActive == true) return
         worker = scope.launch {
             for (snapshot in inbox) {
-                process(snapshot)
+                try {
+                    process(snapshot)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Throwable) {
+                    // One screen that trips up a parser must never end the
+                    // shift. Without this, a single unexpected layout kills the
+                    // worker coroutine and every later offer lands in a channel
+                    // nobody is reading - the card appears once and never again.
+                    _stats.value = _stats.value.copy(errors = _stats.value.errors + 1)
+                    lastError = error.toString()
+                }
             }
         }
     }
+
+    /** The most recent failure, for the diagnostics screen. */
+    @Volatile
+    var lastError: String? = null
+        private set
 
     fun stop() {
         worker?.cancel()

@@ -23,6 +23,8 @@ object Diagnostics {
         val lastConfidence: Float = 0f,
         val lastUpdatedAtMillis: Long = 0,
         val overlayPermissionMissing: Boolean = false,
+        /** The last offer arrived while the phone was locked, where no app may draw a card. */
+        val overlayBlockedByLockScreen: Boolean = false,
         /**
          * The text of the last supported screen, and how it was split into
          * offer cards. Held only in memory, only for the app's own diagnostics

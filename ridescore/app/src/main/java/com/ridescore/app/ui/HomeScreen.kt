@@ -159,6 +159,16 @@ fun HomeScreen(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
+            if (diagnostics.overlayBlockedByLockScreen && !settings.voiceEnabled) {
+                Text(
+                    "That offer arrived while the phone was locked. Rapido can show " +
+                        "an offer over the lock screen, but Android does not let any " +
+                        "app draw a floating card there - so the card cannot appear. " +
+                        "Turn on Voice in Settings to hear the verdict instead.",
+                    color = MaybeAmber,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
 
         SectionCard(

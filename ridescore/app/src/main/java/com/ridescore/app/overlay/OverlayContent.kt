@@ -72,6 +72,11 @@ object OverlayPresenter {
                 add(journeyLine(best))
                 add("${Format.rupeesRounded(best.netPerHour)} net/hr")
                 add("${Format.rupees2(best.netPerKm)} net/km")
+                // Say which rule held it back, so the driver can judge whether
+                // the rule is wrong rather than the offer.
+                if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
+                    add("under ${Format.rupeesRounded(settings.minNetPerKm)}/km target")
+                }
                 best.offer.destination?.let { add("→ $it") }
             }
         }

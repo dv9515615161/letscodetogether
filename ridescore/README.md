@@ -102,6 +102,29 @@ The Home tab shows each permission with a button next to it.
    ride offer.
 5. Open Rapido or Uber and drive. The card appears when an offer does.
 
+### Offers that arrive while the phone is locked
+
+Rapido can show an offer over the lock screen because it is an *activity*, and
+activities may declare `showWhenLocked`. A floating overlay may not: Android
+hides overlay windows behind the keyguard, for every app, with no opt-in.
+
+So on the lock screen RideScore still reads the offer and still scores it, but
+the card cannot be drawn. Turn **Voice** on in Settings and the verdict is
+spoken instead, which is the safer way to take it on a bike anyway.
+
+### Everything comes out as MAYBE
+
+Usually the per-km rule. ACCEPT requires the hourly rate **and** the net ₹/km
+floor to pass, and ₹/km is the harder of the two on short bike rides: at
+₹3.20/km of fuel, a ₹9/km *net* floor needs roughly ₹12.20/km gross, which many
+bike-taxi fares never reach. Either lower **Minimum net per km** to something
+your city's fares actually pay, or switch off **Require both metrics** and let
+the hourly rate decide alone. The detailed card names this rule when it is the
+one holding an offer back.
+
+The other cause is confidence: a read below the accept threshold is capped at
+MAYBE on purpose. The Home tab shows the confidence of the last read.
+
 ### Google Play Protect blocks the install
 
 Expected, and not a sign of a bad build. RideScore declares an accessibility

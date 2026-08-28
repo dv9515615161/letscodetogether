@@ -185,6 +185,26 @@ class OfferPipelineTest {
         scope.cancel()
     }
 
+    @Test
+    fun `a screen that trips up the engine does not end the pipeline`() = runTest {
+        val engine = ExplodingEngine(explodeOnFare = "66")
+        val pipeline = OfferPipeline(engine, { settings }, this)
+        pipeline.start()
+
+        pipeline.submit(TestFixtures.rapido(offerLines(66)))
+        advanceUntilIdle()
+        assertEquals(1L, pipeline.stats.value.errors)
+        assertNull(pipeline.results.value)
+
+        // The very next offer must still be analysed. Before this was handled,
+        // one bad screen killed the worker and the card never came back.
+        pipeline.submit(TestFixtures.rapido(offerLines(90)))
+        advanceUntilIdle()
+        assertEquals(90.0, pipeline.results.value!!.analysis.best!!.grossEarning, 0.001)
+
+        pipeline.stop()
+    }
+
     // ---------------------------------------------------------------- doubles
 
     private open class CountingEngine : RideScoreEngine() {
@@ -198,6 +218,15 @@ class OfferPipelineTest {
     private class SlowEngine(private val delayMillis: Long) : CountingEngine() {
         override fun analyse(snapshot: ScreenSnapshot, settings: RideScoreSettings): ScreenAnalysis {
             Thread.sleep(delayMillis)
+            return super.analyse(snapshot, settings)
+        }
+    }
+
+    private class ExplodingEngine(private val explodeOnFare: String) : RideScoreEngine() {
+        override fun analyse(snapshot: ScreenSnapshot, settings: RideScoreSettings): ScreenAnalysis {
+            if (snapshot.allLines.any { it.contains(explodeOnFare) }) {
+                error("simulated parser failure on an unexpected screen")
+            }
             return super.analyse(snapshot, settings)
         }
     }
