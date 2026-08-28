@@ -17,9 +17,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // A committed debug key, so every build - local or CI - signs with the
+        // same certificate and a new APK installs over an older one instead of
+        // failing with a signature mismatch. This is a debug key with Android's
+        // well-known password; it grants nothing and protects nothing.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             // No signing config committed. Android Studio -> Build > Generate Signed Bundle / APK
