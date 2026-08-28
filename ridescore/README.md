@@ -102,6 +102,33 @@ The Home tab shows each permission with a button next to it.
    ride offer.
 5. Open Rapido or Uber and drive. The card appears when an offer does.
 
+### Google Play Protect blocks the install
+
+Expected, and not a sign of a bad build. RideScore declares an accessibility
+service, and Play Protect hard-blocks any sideloaded app that requests one,
+because that permission is the one Android banking malware abuses most. The
+block is about the category, not about anything found in this app.
+
+To install anyway:
+
+1. Play Store → profile picture → **Play Protect** → **⚙️ gear** → turn off
+   *Scan apps with Play Protect*.
+2. Open the APK again and install it.
+3. Turn Play Protect back on. If it then offers to uninstall RideScore, keep it.
+
+### The Accessibility switch is greyed out
+
+Android 13 and newer put accessibility behind *restricted settings* for any app
+that did not come from an app store. Clear it once:
+
+**Settings ▸ Apps ▸ RideScore ▸ ⋮ (top right) ▸ Allow restricted settings**
+
+The switch in Settings ▸ Accessibility then works normally.
+
+Both of these are Android protections working as designed. The way to avoid them
+entirely is to ship through the Play Store, which requires a developer account
+and a review that specifically covers accessibility use.
+
 Two things worth doing on most Indian phones: exempt RideScore from battery
 optimisation (Settings ▸ Apps ▸ RideScore ▸ Battery ▸ Unrestricted), and check
 the Home tab's **Status** section, which names the last foreground package it
