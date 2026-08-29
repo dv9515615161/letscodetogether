@@ -48,7 +48,12 @@ data class RideAnalysis(
     val notes: List<String> = emptyList(),
     /** True when pickup minutes were derived from pickup speed, not read on screen. */
     val pickupTimeEstimated: Boolean = false,
+    /** Unpaid kilometres assumed for riding back from the drop. Zero when off. */
+    val returnDistanceKm: Double = 0.0,
+    /** Unpaid minutes for that ride back. */
+    val returnTimeMinutes: Double = 0.0,
 ) {
+    val includesEmptyReturn: Boolean get() = returnDistanceKm > 0.0
     val isActionable: Boolean get() = decision != Decision.CHECK
     val isGood: Boolean get() = decision == Decision.ACCEPT
 }

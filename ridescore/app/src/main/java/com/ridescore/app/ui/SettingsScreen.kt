@@ -100,6 +100,36 @@ fun SettingsScreen(
         }
 
         SectionCard(
+            title = "The ride back",
+            subtitle = "A long drop can pay well and still ruin the hour, because the " +
+                "kilometres back are unpaid fuel and unpaid time. Turn this on and long " +
+                "trips are scored on the round trip instead of the paid leg.",
+        ) {
+            SwitchRow(
+                label = "Assume you ride back empty",
+                checked = settings.emptyReturnEnabled,
+                description = "Nothing is assumed about demand out there - only that if no " +
+                    "order comes, you ride back.",
+            ) { on -> onChange { it.copy(emptyReturnEnabled = on) } }
+
+            NumberField(
+                "Only for trips longer than",
+                settings.emptyReturnFromKm,
+                "km",
+                0,
+                enabled = settings.emptyReturnEnabled,
+            ) { v -> onChange { it.copy(emptyReturnFromKm = v) } }
+
+            NumberField(
+                "How much of it you ride back",
+                settings.emptyReturnFraction * 100.0,
+                "%",
+                0,
+                enabled = settings.emptyReturnEnabled,
+            ) { v -> onChange { it.copy(emptyReturnFraction = v / 100.0) } }
+        }
+
+        SectionCard(
             title = "Optional costs",
             subtitle = "Off by default. With both off, net earning means fare minus fuel, " +
                 "and nothing else is claimed.",
@@ -139,9 +169,32 @@ fun SettingsScreen(
                 onSelect = { mode -> onChange { it.copy(overlayMode = mode) } },
             )
             SwitchRow(
-                label = "Show distance and time in quick mode",
+                label = "Show fare, distance and time",
                 checked = settings.overlayShowDetailsInQuickMode,
             ) { on -> onChange { it.copy(overlayShowDetailsInQuickMode = on) } }
+
+            Text("Card size", style = MaterialTheme.typography.bodySmall)
+            ChipRow(
+                options = listOf(0.9f, 1.0f, 1.25f, 1.5f, 1.8f),
+                selected = listOf(0.9f, 1.0f, 1.25f, 1.5f, 1.8f)
+                    .minByOrNull { kotlin.math.abs(it - settings.overlayTextScale) },
+                label = { scale ->
+                    when (scale) {
+                        0.9f -> "Small"
+                        1.0f -> "Normal"
+                        1.25f -> "Large"
+                        1.5f -> "Larger"
+                        else -> "Biggest"
+                    }
+                },
+                onSelect = { scale -> onChange { it.copy(overlayTextScale = scale) } },
+            )
+            Text(
+                "The net rupees per hour is the biggest thing on the card - it is what " +
+                    "the decision is made on, and what you have time to read at a glance.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             NumberField("Hide the card after", settings.overlayAutoHideMillis / 1000.0, "seconds", 0) { v ->
                 onChange { it.copy(overlayAutoHideMillis = (v * 1000).toLong()) }
             }

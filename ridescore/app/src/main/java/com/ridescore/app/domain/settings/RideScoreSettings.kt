@@ -50,6 +50,20 @@ data class RideScoreSettings(
     val includePickupDistance: Boolean = true,
     val includePickupTime: Boolean = true,
 
+    // ---- The ride back --------------------------------------------------
+    /**
+     * A long drop leaves the driver somewhere that may have no order back. The
+     * ride home is then unpaid fuel and unpaid time, and it can turn a green
+     * offer into a bad hour. Off by default, because whether it applies depends
+     * on the city and the hour - but it is the single most useful thing to turn
+     * on if long trips have burned you.
+     */
+    val emptyReturnEnabled: Boolean = false,
+    /** Only trips at least this long are assumed to need a ride back. */
+    val emptyReturnFromKm: Double = 10.0,
+    /** How much of the drop distance you expect to ride back empty. */
+    val emptyReturnFraction: Double = 1.0,
+
     // ---- Optional costs (off by default) --------------------------------
     val maintenanceEnabled: Boolean = false,
     val maintenancePerKm: Double = DEFAULT_MAINTENANCE_PER_KM,
@@ -60,6 +74,8 @@ data class RideScoreSettings(
     val overlayEnabled: Boolean = true,
     val overlayMode: OverlayMode = OverlayMode.QUICK,
     val overlayShowDetailsInQuickMode: Boolean = true,
+    /** Card text size. Bigger is easier to read at a glance on a bike. */
+    val overlayTextScale: Float = 1.0f,
     val voiceEnabled: Boolean = false,
     val voiceMinIntervalMillis: Long = 3_000L,
     val overlayAutoHideMillis: Long = 20_000L,
@@ -114,6 +130,9 @@ data class RideScoreSettings(
         maybeNetPerHour = maybeNetPerHour.coerceIn(0.0, acceptNetPerHour),
         minNetPerKm = minNetPerKm.coerceIn(0.0, 1_000.0),
         pickupSpeedKmph = pickupSpeedKmph.coerceIn(3.0, 80.0),
+        emptyReturnFromKm = emptyReturnFromKm.coerceIn(0.0, 500.0),
+        emptyReturnFraction = emptyReturnFraction.coerceIn(0.0, 1.0),
+        overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),
         maintenancePerKm = maintenancePerKm.coerceIn(0.0, 100.0),
         platformFeePercent = platformFeePercent.coerceIn(0.0, 90.0),
     )

@@ -60,6 +60,9 @@ class SettingsRepository(private val context: Context) {
             pickupSpeedKmph = this[Keys.PICKUP_SPEED] ?: d.pickupSpeedKmph,
             includePickupDistance = this[Keys.INCLUDE_PICKUP_KM] ?: d.includePickupDistance,
             includePickupTime = this[Keys.INCLUDE_PICKUP_MIN] ?: d.includePickupTime,
+            emptyReturnEnabled = this[Keys.EMPTY_RETURN_ON] ?: d.emptyReturnEnabled,
+            emptyReturnFromKm = this[Keys.EMPTY_RETURN_FROM_KM] ?: d.emptyReturnFromKm,
+            emptyReturnFraction = this[Keys.EMPTY_RETURN_FRACTION] ?: d.emptyReturnFraction,
             maintenanceEnabled = this[Keys.MAINTENANCE_ON] ?: d.maintenanceEnabled,
             maintenancePerKm = this[Keys.MAINTENANCE_PER_KM] ?: d.maintenancePerKm,
             platformFeeEnabled = this[Keys.PLATFORM_FEE_ON] ?: d.platformFeeEnabled,
@@ -68,6 +71,7 @@ class SettingsRepository(private val context: Context) {
             overlayMode = this[Keys.OVERLAY_MODE]?.let { runCatching { OverlayMode.valueOf(it) }.getOrNull() }
                 ?: d.overlayMode,
             overlayShowDetailsInQuickMode = this[Keys.QUICK_DETAILS] ?: d.overlayShowDetailsInQuickMode,
+            overlayTextScale = this[Keys.TEXT_SCALE] ?: d.overlayTextScale,
             voiceEnabled = this[Keys.VOICE_ON] ?: d.voiceEnabled,
             voiceMinIntervalMillis = this[Keys.VOICE_INTERVAL] ?: d.voiceMinIntervalMillis,
             overlayAutoHideMillis = this[Keys.OVERLAY_AUTO_HIDE] ?: d.overlayAutoHideMillis,
@@ -93,6 +97,9 @@ class SettingsRepository(private val context: Context) {
         this[Keys.PICKUP_SPEED] = s.pickupSpeedKmph
         this[Keys.INCLUDE_PICKUP_KM] = s.includePickupDistance
         this[Keys.INCLUDE_PICKUP_MIN] = s.includePickupTime
+        this[Keys.EMPTY_RETURN_ON] = s.emptyReturnEnabled
+        this[Keys.EMPTY_RETURN_FROM_KM] = s.emptyReturnFromKm
+        this[Keys.EMPTY_RETURN_FRACTION] = s.emptyReturnFraction
         this[Keys.MAINTENANCE_ON] = s.maintenanceEnabled
         this[Keys.MAINTENANCE_PER_KM] = s.maintenancePerKm
         this[Keys.PLATFORM_FEE_ON] = s.platformFeeEnabled
@@ -100,6 +107,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.OVERLAY_ON] = s.overlayEnabled
         this[Keys.OVERLAY_MODE] = s.overlayMode.name
         this[Keys.QUICK_DETAILS] = s.overlayShowDetailsInQuickMode
+        this[Keys.TEXT_SCALE] = s.overlayTextScale
         this[Keys.VOICE_ON] = s.voiceEnabled
         this[Keys.VOICE_INTERVAL] = s.voiceMinIntervalMillis
         this[Keys.OVERLAY_AUTO_HIDE] = s.overlayAutoHideMillis
@@ -123,6 +131,10 @@ class SettingsRepository(private val context: Context) {
         val PICKUP_SPEED = doublePreferencesKey("pickup_speed_kmph")
         val INCLUDE_PICKUP_KM = booleanPreferencesKey("include_pickup_distance")
         val INCLUDE_PICKUP_MIN = booleanPreferencesKey("include_pickup_time")
+        val EMPTY_RETURN_ON = booleanPreferencesKey("empty_return_enabled")
+        val EMPTY_RETURN_FROM_KM = doublePreferencesKey("empty_return_from_km")
+        val EMPTY_RETURN_FRACTION = doublePreferencesKey("empty_return_fraction")
+        val TEXT_SCALE = floatPreferencesKey("overlay_text_scale")
         val MAINTENANCE_ON = booleanPreferencesKey("maintenance_enabled")
         val MAINTENANCE_PER_KM = doublePreferencesKey("maintenance_per_km")
         val PLATFORM_FEE_ON = booleanPreferencesKey("platform_fee_enabled")

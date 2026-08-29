@@ -45,6 +45,7 @@ class OverlayController(private val context: Context) {
     private var card: LinearLayout? = null
     private var headerView: TextView? = null
     private var primaryView: TextView? = null
+    private var captionView: TextView? = null
     private var detailViews: List<TextView> = emptyList()
     private var otherViews: List<TextView> = emptyList()
     private var footerView: TextView? = null
@@ -101,6 +102,7 @@ class OverlayController(private val context: Context) {
         card = null
         headerView = null
         primaryView = null
+        captionView = null
         detailViews = emptyList()
         otherViews = emptyList()
         footerView = null
@@ -115,15 +117,25 @@ class OverlayController(private val context: Context) {
             text = content.header
             setTextColor(accent)
         }
+        val scale = settings.overlayTextScale.coerceIn(0.8f, 2.0f)
+
+        headerView?.setTextSize(TypedValue.COMPLEX_UNIT_SP, HEADER_SP * scale)
         primaryView?.apply {
             maxLines = if (content.decision == Decision.CHECK) 2 else 1
             text = content.primary
             setTextColor(Color.WHITE)
-            setTextSize(
-                TypedValue.COMPLEX_UNIT_SP,
-                if (settings.overlayMode == OverlayMode.QUICK) 22f else 20f,
-            )
+            // The rate is the thing being read at a glance, so it gets the
+            // biggest type on the card in both modes.
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, PRIMARY_SP * scale)
         }
+        captionView?.apply {
+            text = content.primaryCaption ?: ""
+            visibility = if (content.primaryCaption == null) View.GONE else View.VISIBLE
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, CAPTION_SP * scale)
+        }
+        detailViews.forEach { it.setTextSize(TypedValue.COMPLEX_UNIT_SP, DETAIL_SP * scale) }
+        otherViews.forEach { it.setTextSize(TypedValue.COMPLEX_UNIT_SP, OTHER_SP * scale) }
+        footerView?.setTextSize(TypedValue.COMPLEX_UNIT_SP, FOOTER_SP * scale)
 
         detailViews.forEachIndexed { i, view ->
             val line = content.detailLines.getOrNull(i)
@@ -141,8 +153,11 @@ class OverlayController(private val context: Context) {
         }
 
         card?.background = cardBackground(accent)
-        card?.minimumWidth =
-            dp(if (settings.overlayMode == OverlayMode.QUICK) QUICK_WIDTH_DP else DETAILED_WIDTH_DP)
+        val width = (if (settings.overlayMode == OverlayMode.QUICK) QUICK_WIDTH_DP else DETAILED_WIDTH_DP) * scale
+        card?.minimumWidth = dp(width.toInt())
+        val maxWidth = dp((DETAILED_WIDTH_DP * scale).toInt())
+        (detailViews + otherViews + listOfNotNull(headerView, primaryView, captionView, footerView))
+            .forEach { it.maxWidth = maxWidth }
     }
 
     private fun accentColor(decision: Decision, lowConfidence: Boolean): Int = when {
@@ -169,13 +184,17 @@ class OverlayController(private val context: Context) {
             minimumWidth = dp(QUICK_WIDTH_DP)
         }
 
-        headerView = textView(13f, bold = true).also { root.addView(it) }
-        primaryView = textView(22f, bold = true).also { root.addView(it) }
-        detailViews = List(4) { textView(12f, color = Color.parseColor("#D8D8D8")).also { root.addView(it) } }
-        otherViews = List(OverlayPresenter.MAX_RANKED_SHOWN - 1) {
-            textView(11f, color = Color.parseColor("#B0B0B0")).also { root.addView(it) }
+        headerView = textView(HEADER_SP, bold = true).also { root.addView(it) }
+        primaryView = textView(PRIMARY_SP, bold = true).also { root.addView(it) }
+        captionView = textView(CAPTION_SP, color = Color.parseColor("#9A9A9A"))
+            .also { root.addView(it) }
+        detailViews = List(5) {
+            textView(DETAIL_SP, color = Color.parseColor("#D8D8D8")).also { root.addView(it) }
         }
-        footerView = textView(9f, color = Color.parseColor("#7A7A7A")).also { root.addView(it) }
+        otherViews = List(OverlayPresenter.MAX_RANKED_SHOWN - 1) {
+            textView(OTHER_SP, color = Color.parseColor("#B0B0B0")).also { root.addView(it) }
+        }
+        footerView = textView(FOOTER_SP, color = Color.parseColor("#7A7A7A")).also { root.addView(it) }
 
         root.setOnTouchListener(DragListener())
         return root
@@ -273,8 +292,16 @@ class OverlayController(private val context: Context) {
         (value * context.resources.displayMetrics.density).roundToInt()
 
     companion object {
-        const val QUICK_WIDTH_DP = 150
-        const val DETAILED_WIDTH_DP = 190
+        const val QUICK_WIDTH_DP = 170
+        const val DETAILED_WIDTH_DP = 210
+
+        // Base sizes, multiplied by the driver's card-size setting.
+        const val HEADER_SP = 14f
+        const val PRIMARY_SP = 30f
+        const val CAPTION_SP = 10f
+        const val DETAIL_SP = 13f
+        const val OTHER_SP = 12f
+        const val FOOTER_SP = 9f
 
         private val CARD_BACKGROUND = Color.parseColor("#F0101418")
         private val COLOR_ACCEPT = Color.parseColor("#33D17A")

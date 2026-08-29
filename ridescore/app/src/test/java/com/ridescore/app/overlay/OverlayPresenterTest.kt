@@ -17,15 +17,16 @@ class OverlayPresenterTest {
     private val quick = RideScoreSettings.DEFAULT.copy(overlayMode = OverlayMode.QUICK)
 
     @Test
-    fun `detailed card matches the brief's layout`() {
+    fun `the rate is the headline, because that is what gets read at a glance`() {
         val analysis = engine.analyse(TestFixtures.rapido(TestFixtures.RAPIDO_OFFER_A), detailed)
         val content = OverlayPresenter.present(analysis, detailed)!!
 
         assertEquals("🔴 REJECT", content.header)
-        assertEquals("₹60", content.primary)
-        assertEquals("7.7 km • 19 min", content.detailLines[0])
-        assertEquals("₹112 net/hr", content.detailLines[1])
-        assertEquals("₹4.59 net/km", content.detailLines[2])
+        assertEquals("₹112/hr", content.primary)
+        assertEquals("net per hour, after fuel", content.primaryCaption)
+        // The fare, distance and time follow it, smaller.
+        assertEquals("₹60 · 7.7 km • 19 min", content.detailLines[0])
+        assertEquals("₹4.59 net/km", content.detailLines[1])
     }
 
     @Test
@@ -37,7 +38,9 @@ class OverlayPresenterTest {
         assertEquals("🟢 ACCEPT", content.header)
         assertTrue(content.primary.endsWith("/hr"))
         assertEquals(1, content.detailLines.size)
-        assertEquals("10 km • 26 min", content.detailLines[0])
+        assertEquals("₹210 · 10 km • 26 min", content.detailLines[0])
+        // Quick mode drops the caption; the header and the number carry it.
+        assertEquals(null, content.primaryCaption)
     }
 
     @Test

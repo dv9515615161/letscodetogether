@@ -54,23 +54,45 @@ class FareCalculator(
             notes += "Pickup distance excluded by settings"
         }
 
+        // The ride back. A 30 km drop can pay well for the drop and still ruin
+        // the hour, because the kilometres home are unpaid fuel and unpaid
+        // time. Nothing is assumed about demand out there - only that if no
+        // order comes, the driver rides back at the speed they just rode out.
+        val returnKm =
+            if (s.emptyReturnEnabled && tripKm >= s.emptyReturnFromKm) tripKm * s.emptyReturnFraction
+            else 0.0
+        val returnMin = if (returnKm > 0.0) {
+            val tripSpeed = if (tripMin > 0.0) tripKm / (tripMin / 60.0) else s.pickupSpeedKmph
+            if (tripSpeed > 0.0) returnKm / tripSpeed * 60.0 else 0.0
+        } else {
+            0.0
+        }
+        if (returnKm > 0.0) {
+            notes += "Includes ${fmtMinutes(returnKm)} km ridden back empty"
+        }
+
+        // Distance that costs fuel, and time that is spent, both include the
+        // ride back. Only the paid leg earns.
+        val costedKm = totalKm + returnKm
+        val spentMin = totalMin + returnMin
+
         val gross = offer.totalFare ?: 0.0
         val platformFee = if (s.platformFeeEnabled) gross * s.platformFeePercent / 100.0 else 0.0
-        val fuelCost = totalKm * s.fuelCostPerKm
-        val maintenanceCost = if (s.maintenanceEnabled) totalKm * s.maintenancePerKm else 0.0
+        val fuelCost = costedKm * s.fuelCostPerKm
+        val maintenanceCost = if (s.maintenanceEnabled) costedKm * s.maintenancePerKm else 0.0
         val net = gross - platformFee - fuelCost - maintenanceCost
 
-        val hours = totalMin / 60.0
+        val hours = spentMin / 60.0
         val grossPerHour = if (hours > 0.0) gross / hours else 0.0
         val netPerHour = if (hours > 0.0) net / hours else 0.0
-        val grossPerKm = if (totalKm > 0.0) gross / totalKm else 0.0
-        val netPerKm = if (totalKm > 0.0) net / totalKm else 0.0
+        val grossPerKm = if (costedKm > 0.0) gross / costedKm else 0.0
+        val netPerKm = if (costedKm > 0.0) net / costedKm else 0.0
 
         val outcome = decisionEngine.decide(
             DecisionInput(
                 offer = offer,
-                totalDistanceKm = totalKm,
-                totalTimeMinutes = totalMin,
+                totalDistanceKm = costedKm,
+                totalTimeMinutes = spentMin,
                 netPerHour = netPerHour,
                 netPerKm = netPerKm,
                 confidence = offer.confidence,
@@ -80,8 +102,8 @@ class FareCalculator(
 
         return RideAnalysis(
             offer = offer,
-            totalDistanceKm = totalKm,
-            totalTimeMinutes = totalMin,
+            totalDistanceKm = costedKm,
+            totalTimeMinutes = spentMin,
             grossEarning = gross,
             fuelCost = fuelCost,
             maintenanceCost = maintenanceCost,
@@ -96,6 +118,8 @@ class FareCalculator(
             reasons = outcome.reasons,
             notes = offer.notes + notes,
             pickupTimeEstimated = pickupTimeEstimated,
+            returnDistanceKm = returnKm,
+            returnTimeMinutes = returnMin,
         )
     }
 

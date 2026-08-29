@@ -55,6 +55,7 @@ class OfferLogger(private val context: Context) {
 
         runCatching {
             val target = file
+            rotateIfSchemaChanged(target)
             val isNew = !target.exists() || target.length() == 0L
             target.appendText(
                 buildString {
@@ -84,6 +85,7 @@ class OfferLogger(private val context: Context) {
     fun clear() {
         recentlyLogged.clear()
         runCatching { file.delete() }
+        runCatching { File(context.filesDir, PREVIOUS_FILE_NAME).delete() }
     }
 
     /**
@@ -122,6 +124,23 @@ class OfferLogger(private val context: Context) {
         return false
     }
 
+    /**
+     * A new app version can add columns. Appending new-shaped rows under an old
+     * header would produce a file that no spreadsheet reads correctly, so the
+     * old log is set aside intact and a fresh one started.
+     */
+    private fun rotateIfSchemaChanged(target: File) {
+        if (!target.exists() || target.length() == 0L) return
+        val header = runCatching { target.bufferedReader().use { it.readLine() } }.getOrNull()
+        if (header == OfferCsv.header()) return
+
+        val previous = File(context.filesDir, PREVIOUS_FILE_NAME)
+        runCatching {
+            previous.delete()
+            target.renameTo(previous)
+        }.onFailure { Log.w(TAG, "Could not set the old log aside", it) }
+    }
+
     /** Keeps the newest half when the file gets too big, header intact. */
     private fun trim(target: File) {
         runCatching {
@@ -136,6 +155,7 @@ class OfferLogger(private val context: Context) {
     private companion object {
         const val TAG = "RideScoreLog"
         const val FILE_NAME = "ride-log.csv"
+        const val PREVIOUS_FILE_NAME = "ride-log-previous.csv"
 
         /** Roughly 8,000 offers. Well past a month of full-time driving. */
         const val MAX_BYTES = 2L * 1024 * 1024

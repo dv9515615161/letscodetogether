@@ -26,6 +26,8 @@ import com.ridescore.app.util.Format
 data class OverlayContent(
     val header: String,
     val primary: String,
+    /** Small line under the big number, saying what it is. */
+    val primaryCaption: String? = null,
     val detailLines: List<String>,
     val otherOffers: List<String>,
     val decision: Decision,
@@ -63,26 +65,32 @@ object OverlayPresenter {
             else -> "${best.decision.emoji} ${best.decision.label}"
         }
 
-        val primary = if (quick) Format.perHour(best.netPerHour) else Format.rupeesRounded(best.grossEarning)
+        // Net rupees per hour is the headline in both modes. It is the number
+        // the decision is made on, and it is the one a rider glancing down at a
+        // handlebar has time to read - the fare tells them much less.
+        val primary = Format.perHour(best.netPerHour)
 
         val details = if (quick) {
             buildList {
-                if (settings.overlayShowDetailsInQuickMode) add(journeyLine(best))
-                // Without this, a quick-mode MAYBE gives the driver no idea
-                // which of the two rules it fell short on.
+                if (settings.overlayShowDetailsInQuickMode) {
+                    add("${Format.rupeesRounded(best.grossEarning)} · ${journeyLine(best)}")
+                }
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("${Format.rupees2(best.netPerKm)}/km · under ${Format.rupeesRounded(settings.minNetPerKm)}")
                 }
+                if (best.includesEmptyReturn) add("incl. ride back")
             }
         } else {
             buildList {
-                add(journeyLine(best))
-                add("${Format.rupeesRounded(best.netPerHour)} net/hr")
+                add("${Format.rupeesRounded(best.grossEarning)} · ${journeyLine(best)}")
                 add("${Format.rupees2(best.netPerKm)} net/km")
                 // Say which rule held it back, so the driver can judge whether
                 // the rule is wrong rather than the offer.
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("under ${Format.rupeesRounded(settings.minNetPerKm)}/km target")
+                }
+                if (best.includesEmptyReturn) {
+                    add("incl. ${Format.decimal(best.returnDistanceKm)} km back empty")
                 }
                 best.offer.destination?.let { add("→ $it") }
             }
@@ -98,6 +106,7 @@ object OverlayPresenter {
         return OverlayContent(
             header = header,
             primary = primary,
+            primaryCaption = if (quick) null else "net per hour, after fuel",
             detailLines = details,
             otherOffers = others,
             decision = best.decision,

@@ -122,6 +122,25 @@ or one switch away:
 RideScore deliberately does not use a full-screen intent to force itself in
 front of the offer. That would cover the screen the driver is trying to read.
 
+### A long trip scored green and then there was no order back
+
+The default calculation scores the ride it was shown: fare, distance, time. It
+knows nothing about where the drop leaves you. A 30 km drop for ₹280 is ₹157
+net an hour on the paid leg and green under most thresholds - and if there is
+no order back, the ride home is 30 km of unpaid fuel and an unpaid hour, which
+turns the same offer into **₹38 net an hour**.
+
+Switch on **Settings ▸ The ride back ▸ Assume you ride back empty** and trips
+over the threshold (10 km by default) are scored on the round trip: the return
+kilometres cost fuel and time, and earn nothing. The card marks those offers
+`incl. ride back` so it is never applied silently.
+
+This assumes nothing about demand. It does not claim the drop area is quiet -
+only that *if* no order comes, this is what the offer was really worth. Whether
+that is the right assumption for your city and your hour is a judgement the
+ride log will eventually answer, since it records every destination you were
+offered.
+
 ### Everything comes out as MAYBE
 
 Usually the per-km rule. ACCEPT requires the hourly rate **and** the net ₹/km
@@ -351,6 +370,9 @@ Target: the card is up as soon as the offer is, and a stale offer is never shown
 - **Cheap analysis.** Parse plus arithmetic plus ranking for a two-offer screen
   is a few hundred microseconds on a JVM; the test suite fails if it exceeds
   2 ms.
+- **The rate is the headline.** Net ₹/hour is the biggest thing on the card in
+  both modes, because it is what the decision is made on and what a rider
+  glancing at a handlebar has time to read. Card size is adjustable up to 1.8×.
 - **Overlay updates are text sets on existing views** — no re-inflation, no
   recomposition. That is why the card is built from Views rather than Compose,
   while the app's own screens are Compose.
