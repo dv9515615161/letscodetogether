@@ -73,21 +73,27 @@ object OverlayPresenter {
         val details = if (quick) {
             buildList {
                 if (settings.overlayShowDetailsInQuickMode) {
-                    add("${Format.rupeesRounded(best.grossEarning)} · ${journeyLine(best)}")
+                    add("${Format.rupeesRounded(best.totalEarning)} · ${journeyLine(best)}")
                 }
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("${Format.rupees2(best.netPerKm)}/km · under ${Format.rupeesRounded(settings.minNetPerKm)}")
+                }
+                if (best.includesIncentive) {
+                    add("₹${best.grossEarning.toInt()} + ₹${best.incentiveEarning.toInt()} bonus")
                 }
                 if (best.includesEmptyReturn) add("incl. ride back")
             }
         } else {
             buildList {
-                add("${Format.rupeesRounded(best.grossEarning)} · ${journeyLine(best)}")
+                add("${Format.rupeesRounded(best.totalEarning)} · ${journeyLine(best)}")
                 add("${Format.rupees2(best.netPerKm)} net/km")
                 // Say which rule held it back, so the driver can judge whether
                 // the rule is wrong rather than the offer.
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("under ${Format.rupeesRounded(settings.minNetPerKm)}/km target")
+                }
+                if (best.includesIncentive) {
+                    add("₹${best.incentiveEarning.toInt()} of that is bonus")
                 }
                 if (best.includesEmptyReturn) {
                     add("incl. ${Format.decimal(best.returnDistanceKm)} km back empty")

@@ -33,7 +33,7 @@ object OfferCsv {
     val COLUMNS = listOf(
         "logged_at", "date", "time", "hour", "weekday",
         "app", "screen_id", "offers_on_screen", "rank", "decision", "confidence",
-        "base_fare", "bonus_fare", "total_fare",
+        "base_fare", "bonus_fare", "total_fare", "incentive_share", "total_earning",
         "pickup_km", "trip_km", "total_km",
         "pickup_min", "pickup_min_estimated", "trip_min", "total_min",
         "return_km", "return_min",
@@ -84,6 +84,8 @@ object OfferCsv {
             num(offer.baseFare),
             num(offer.bonusFare),
             num(offer.totalFare),
+            num(ride.incentiveEarning),
+            num(ride.totalEarning),
             num(offer.pickupDistanceKm),
             num(offer.tripDistanceKm),
             num(ride.totalDistanceKm),

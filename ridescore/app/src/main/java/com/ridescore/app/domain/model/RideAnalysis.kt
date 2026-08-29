@@ -33,7 +33,10 @@ data class RideAnalysis(
     val offer: RideOffer,
     val totalDistanceKm: Double,
     val totalTimeMinutes: Double,
+    /** What the offer itself pays. */
     val grossEarning: Double,
+    /** This offer's share of a running trip-count bonus. Zero when none is set. */
+    val incentiveEarning: Double = 0.0,
     val fuelCost: Double,
     val maintenanceCost: Double,
     val platformFee: Double,
@@ -53,6 +56,10 @@ data class RideAnalysis(
     /** Unpaid minutes for that ride back. */
     val returnTimeMinutes: Double = 0.0,
 ) {
+    /** Everything the offer earns: its fare plus its share of the bonus. */
+    val totalEarning: Double get() = grossEarning + incentiveEarning
+
+    val includesIncentive: Boolean get() = incentiveEarning > 0.0
     val includesEmptyReturn: Boolean get() = returnDistanceKm > 0.0
     val isActionable: Boolean get() = decision != Decision.CHECK
     val isGood: Boolean get() = decision == Decision.ACCEPT

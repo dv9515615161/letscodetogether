@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -60,6 +61,10 @@ class SettingsRepository(private val context: Context) {
             pickupSpeedKmph = this[Keys.PICKUP_SPEED] ?: d.pickupSpeedKmph,
             includePickupDistance = this[Keys.INCLUDE_PICKUP_KM] ?: d.includePickupDistance,
             includePickupTime = this[Keys.INCLUDE_PICKUP_MIN] ?: d.includePickupTime,
+            incentiveEnabled = this[Keys.INCENTIVE_ON] ?: d.incentiveEnabled,
+            incentiveBonus = this[Keys.INCENTIVE_BONUS] ?: d.incentiveBonus,
+            incentiveTripsTarget = this[Keys.INCENTIVE_TARGET] ?: d.incentiveTripsTarget,
+            incentiveTripsDone = this[Keys.INCENTIVE_DONE] ?: d.incentiveTripsDone,
             emptyReturnEnabled = this[Keys.EMPTY_RETURN_ON] ?: d.emptyReturnEnabled,
             emptyReturnFromKm = this[Keys.EMPTY_RETURN_FROM_KM] ?: d.emptyReturnFromKm,
             emptyReturnFraction = this[Keys.EMPTY_RETURN_FRACTION] ?: d.emptyReturnFraction,
@@ -97,6 +102,10 @@ class SettingsRepository(private val context: Context) {
         this[Keys.PICKUP_SPEED] = s.pickupSpeedKmph
         this[Keys.INCLUDE_PICKUP_KM] = s.includePickupDistance
         this[Keys.INCLUDE_PICKUP_MIN] = s.includePickupTime
+        this[Keys.INCENTIVE_ON] = s.incentiveEnabled
+        this[Keys.INCENTIVE_BONUS] = s.incentiveBonus
+        this[Keys.INCENTIVE_TARGET] = s.incentiveTripsTarget
+        this[Keys.INCENTIVE_DONE] = s.incentiveTripsDone
         this[Keys.EMPTY_RETURN_ON] = s.emptyReturnEnabled
         this[Keys.EMPTY_RETURN_FROM_KM] = s.emptyReturnFromKm
         this[Keys.EMPTY_RETURN_FRACTION] = s.emptyReturnFraction
@@ -131,6 +140,10 @@ class SettingsRepository(private val context: Context) {
         val PICKUP_SPEED = doublePreferencesKey("pickup_speed_kmph")
         val INCLUDE_PICKUP_KM = booleanPreferencesKey("include_pickup_distance")
         val INCLUDE_PICKUP_MIN = booleanPreferencesKey("include_pickup_time")
+        val INCENTIVE_ON = booleanPreferencesKey("incentive_enabled")
+        val INCENTIVE_BONUS = doublePreferencesKey("incentive_bonus")
+        val INCENTIVE_TARGET = intPreferencesKey("incentive_trips_target")
+        val INCENTIVE_DONE = intPreferencesKey("incentive_trips_done")
         val EMPTY_RETURN_ON = booleanPreferencesKey("empty_return_enabled")
         val EMPTY_RETURN_FROM_KM = doublePreferencesKey("empty_return_from_km")
         val EMPTY_RETURN_FRACTION = doublePreferencesKey("empty_return_fraction")

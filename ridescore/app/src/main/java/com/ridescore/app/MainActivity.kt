@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
                     when (tab) {
                         0 -> HomeScreen(
                             settings = settings,
+                            onChange = { transform -> viewModel.update(transform) },
                             permissions = permissions.value,
                             diagnostics = diagnostics,
                             sample = sample,

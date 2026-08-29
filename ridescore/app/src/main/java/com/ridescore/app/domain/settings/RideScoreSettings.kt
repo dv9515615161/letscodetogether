@@ -50,6 +50,21 @@ data class RideScoreSettings(
     val includePickupDistance: Boolean = true,
     val includePickupTime: Boolean = true,
 
+    // ---- Incentive / quest ----------------------------------------------
+    /**
+     * Both apps run trip-count bonuses - "12 trips today for ₹300". While one
+     * is running, an offer is not worth only its fare: it is worth its fare
+     * plus its share of the bonus, and that share grows as the target gets
+     * closer. Two trips from a ₹300 bonus, a ₹40 order is really a ₹190 order.
+     *
+     * The trip count is kept by hand. RideScore has no way to know a ride was
+     * completed - it reads offer screens, and it is not going to guess.
+     */
+    val incentiveEnabled: Boolean = false,
+    val incentiveBonus: Double = 0.0,
+    val incentiveTripsTarget: Int = 0,
+    val incentiveTripsDone: Int = 0,
+
     // ---- The ride back --------------------------------------------------
     /**
      * A long drop leaves the driver somewhere that may have no order back. The
@@ -113,6 +128,23 @@ data class RideScoreSettings(
      */
     val preferredDestinations: List<String> = emptyList(),
 ) {
+    /** Trips still needed for the bonus. Zero once it is earned. */
+    val incentiveTripsRemaining: Int
+        get() = if (!incentiveEnabled) 0 else (incentiveTripsTarget - incentiveTripsDone).coerceAtLeast(0)
+
+    /**
+     * What the next trip is worth in bonus terms.
+     *
+     * The whole remaining bonus divided by the trips still needed, because
+     * every one of those trips is equally required to unlock it. It rises as
+     * the target approaches, which is exactly how the decision should change.
+     */
+    val incentivePerTrip: Double
+        get() {
+            val remaining = incentiveTripsRemaining
+            return if (remaining > 0 && incentiveBonus > 0.0) incentiveBonus / remaining else 0.0
+        }
+
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double
         get() = if (mileageKmPerLitre > 0.0) petrolPricePerLitre / mileageKmPerLitre else 0.0
@@ -130,6 +162,9 @@ data class RideScoreSettings(
         maybeNetPerHour = maybeNetPerHour.coerceIn(0.0, acceptNetPerHour),
         minNetPerKm = minNetPerKm.coerceIn(0.0, 1_000.0),
         pickupSpeedKmph = pickupSpeedKmph.coerceIn(3.0, 80.0),
+        incentiveBonus = incentiveBonus.coerceIn(0.0, 100_000.0),
+        incentiveTripsTarget = incentiveTripsTarget.coerceIn(0, 200),
+        incentiveTripsDone = incentiveTripsDone.coerceIn(0, 200),
         emptyReturnFromKm = emptyReturnFromKm.coerceIn(0.0, 500.0),
         emptyReturnFraction = emptyReturnFraction.coerceIn(0.0, 1.0),
         overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),

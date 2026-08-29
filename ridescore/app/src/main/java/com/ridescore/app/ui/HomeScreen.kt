@@ -45,6 +45,7 @@ data class PermissionState(
 @Composable
 fun HomeScreen(
     settings: RideScoreSettings,
+    onChange: ((RideScoreSettings) -> RideScoreSettings) -> Unit,
     permissions: PermissionState,
     diagnostics: Diagnostics.State,
     sample: ScreenAnalysis?,
@@ -87,6 +88,74 @@ fun HomeScreen(
         }
 
         SectionCard(
+            title = "Incentive",
+            subtitle = if (settings.incentiveEnabled) {
+                "Every remaining trip carries a share of the bonus, and the share grows " +
+                    "as the target gets closer."
+            } else {
+                "Running a trip-count bonus? Tell RideScore and it will value each offer " +
+                    "with its share of that bonus, not just its fare."
+            },
+        ) {
+            SwitchRow(
+                label = "Count a trip bonus",
+                checked = settings.incentiveEnabled,
+            ) { on -> onChange { it.copy(incentiveEnabled = on) } }
+
+            if (settings.incentiveEnabled) {
+                NumberField("Bonus amount", settings.incentiveBonus, "₹", 0) { v ->
+                    onChange { it.copy(incentiveBonus = v) }
+                }
+                NumberField("Trips needed", settings.incentiveTripsTarget.toDouble(), "trips", 0) { v ->
+                    onChange { it.copy(incentiveTripsTarget = v.toInt()) }
+                }
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "${settings.incentiveTripsDone} of ${settings.incentiveTripsTarget} done",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            if (settings.incentiveTripsRemaining > 0) {
+                                "${settings.incentiveTripsRemaining} to go · each worth " +
+                                    "${Format.rupeesRounded(settings.incentivePerTrip)} extra"
+                            } else {
+                                "Bonus reached - offers are back to their fare alone"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = {
+                                onChange {
+                                    it.copy(incentiveTripsDone = (it.incentiveTripsDone - 1).coerceAtLeast(0))
+                                }
+                            },
+                        ) { Text("−1") }
+                        Button(
+                            onClick = { onChange { it.copy(incentiveTripsDone = it.incentiveTripsDone + 1) } },
+                        ) { Text("+1 trip") }
+                    }
+                }
+
+                Text(
+                    "You count the trips - RideScore reads offer screens and has no way " +
+                        "to know a ride finished, so it will not guess.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        SectionCard(
             title = "Your rules",
             subtitle = settings.vehicleName,
         ) {
@@ -97,6 +166,12 @@ fun HomeScreen(
             LabelledValue("Maybe", "${Format.rupeesRounded(settings.maybeNetPerHour)} net/hr")
             LabelledValue("Min per km", "${Format.rupees2(settings.minNetPerKm)} net/km")
             LabelledValue("Watching", settings.appMode.label)
+            if (settings.incentiveEnabled && settings.incentivePerTrip > 0.0) {
+                LabelledValue("Bonus per trip", "+${Format.rupeesRounded(settings.incentivePerTrip)}")
+            }
+            if (settings.emptyReturnEnabled) {
+                LabelledValue("Ride back", "counted over ${Format.decimal(settings.emptyReturnFromKm)} km")
+            }
         }
 
         SectionCard(

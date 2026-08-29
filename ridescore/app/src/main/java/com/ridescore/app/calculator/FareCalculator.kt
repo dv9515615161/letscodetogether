@@ -77,15 +77,29 @@ class FareCalculator(
         val spentMin = totalMin + returnMin
 
         val gross = offer.totalFare ?: 0.0
+
+        // A trip-count bonus makes every remaining trip worth more than its
+        // fare. Only counted when the offer is one RideScore could actually
+        // read - a share of a bonus attached to an unreadable offer would just
+        // be a made-up number.
+        val incentive = if (gross > 0.0) s.incentivePerTrip else 0.0
+        val earned = gross + incentive
+
+        // Commission is charged on fares, not on bonuses.
         val platformFee = if (s.platformFeeEnabled) gross * s.platformFeePercent / 100.0 else 0.0
         val fuelCost = costedKm * s.fuelCostPerKm
         val maintenanceCost = if (s.maintenanceEnabled) costedKm * s.maintenancePerKm else 0.0
-        val net = gross - platformFee - fuelCost - maintenanceCost
+        val net = earned - platformFee - fuelCost - maintenanceCost
+
+        if (incentive > 0.0) {
+            notes += "Includes ₹${incentive.toInt()} of the ₹${s.incentiveBonus.toInt()} bonus, " +
+                "${s.incentiveTripsRemaining} trip(s) to go"
+        }
 
         val hours = spentMin / 60.0
-        val grossPerHour = if (hours > 0.0) gross / hours else 0.0
+        val grossPerHour = if (hours > 0.0) earned / hours else 0.0
         val netPerHour = if (hours > 0.0) net / hours else 0.0
-        val grossPerKm = if (costedKm > 0.0) gross / costedKm else 0.0
+        val grossPerKm = if (costedKm > 0.0) earned / costedKm else 0.0
         val netPerKm = if (costedKm > 0.0) net / costedKm else 0.0
 
         val outcome = decisionEngine.decide(
@@ -105,6 +119,7 @@ class FareCalculator(
             totalDistanceKm = costedKm,
             totalTimeMinutes = spentMin,
             grossEarning = gross,
+            incentiveEarning = incentive,
             fuelCost = fuelCost,
             maintenanceCost = maintenanceCost,
             platformFee = platformFee,

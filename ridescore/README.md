@@ -122,6 +122,30 @@ or one switch away:
 RideScore deliberately does not use a full-screen intent to force itself in
 front of the offer. That would cover the screen the driver is trying to read.
 
+### Trip-count bonuses
+
+Both apps run them - "12 trips today for ₹300" - and while one is live an offer
+is not worth only its fare. Set the bonus and the target on the **Home** tab and
+tap **+1 trip** as you finish each one. Each remaining offer is then valued at
+its fare plus its share of the bonus:
+
+```
+share per trip = bonus remaining / trips still needed
+```
+
+The share grows as the target approaches, which is exactly how the decision
+should change: ₹300 over 12 trips is ₹25 an offer, but on the last trip that
+same ₹300 rides on one order, and a ₹30 fare that is otherwise a plain reject
+at ₹32/hour becomes ₹932/hour and worth taking. The card shows how much of the
+total is bonus, so it is never a mystery why a poor-looking offer went green.
+
+Two limits worth knowing. **The trip count is yours to keep** - RideScore reads
+offer screens and has no way to know a ride finished, so it will not guess.
+And it assumes you will actually reach the target: if the bonus is out of reach
+with the time left, the share it adds is fiction, and the honest move is to
+switch it off. Commission, when enabled, is charged on the fare only, not on
+the bonus.
+
 ### A long trip scored green and then there was no order back
 
 The default calculation scores the ride it was shown: fare, distance, time. It
