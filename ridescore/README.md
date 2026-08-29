@@ -139,12 +139,38 @@ same ₹300 rides on one order, and a ₹30 fare that is otherwise a plain rejec
 at ₹32/hour becomes ₹932/hour and worth taking. The card shows how much of the
 total is bonus, so it is never a mystery why a poor-looking offer went green.
 
+**A count quest does not lift every offer equally, and that is the useful
+part.** The bonus per trip is fixed no matter how big the trip is, so its
+effect on the *hourly* rate is largest on the shortest ride. From one real
+shift, with ₹250 for 15 trips running:
+
+| Offer | Alone | With the quest | |
+|---|---|---|---|
+| ₹38, 3.7 km, 14 min | ₹113/hr | **₹184/hr** | 🔴 → 🟢 |
+| ₹69, 8.9 km, 27 min | ₹89/hr | ₹126/hr | 🔴 → 🔴 |
+| ₹142, 17.3 km, 45 min | ₹116/hr | ₹138/hr | 🔴 → 🟡 |
+
+The same ₹16.67 rides on all three, but spread over 14 minutes instead of 45.
+The cheapest, shortest offer is the best one to take, which is the opposite of
+the instinct to grab the ₹142 fare.
+
 Two limits worth knowing. **The trip count is yours to keep** - RideScore reads
 offer screens and has no way to know a ride finished, so it will not guess.
 And it assumes you will actually reach the target: if the bonus is out of reach
 with the time left, the share it adds is fiction, and the honest move is to
 switch it off. Commission, when enabled, is charged on the fare only, not on
 the bonus.
+
+### A card appeared over a trip already under way
+
+A navigation screen carries a fare, a distance and a duration exactly like an
+offer does, so it used to parse as one. RideScore now recognises a trip in
+progress and stays out of the way.
+
+What distinguishes them is not the wording but the affordance: an offer has
+something to accept. That matters because both apps put a new offer on top of
+an active trip when they have one, and those must still be scored - a screen
+showing "Navigate" **and** an accept button is a real offer.
 
 ### A long trip scored green and then there was no order back
 

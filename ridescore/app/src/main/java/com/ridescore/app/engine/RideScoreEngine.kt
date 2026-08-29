@@ -6,6 +6,7 @@ import com.ridescore.app.domain.model.ScreenAnalysis
 import com.ridescore.app.domain.model.ScreenSnapshot
 import com.ridescore.app.domain.settings.RideScoreSettings
 import com.ridescore.app.parser.ParserRegistry
+import com.ridescore.app.parser.TripState
 
 /**
  * Screen text in, ranked decisions out.
@@ -23,6 +24,13 @@ open class RideScoreEngine(
     open fun analyse(snapshot: ScreenSnapshot, settings: RideScoreSettings): ScreenAnalysis {
         val started = clock()
         if (snapshot.isEmpty || !settings.watches(snapshot.sourceApp)) {
+            return ScreenAnalysis.empty(snapshot.sourceApp)
+        }
+
+        // A trip already under way is not an offer. Its navigation screen has a
+        // fare, a distance and a duration, and advising on a ride the driver is
+        // already doing is noise in front of them while they are moving.
+        if (TripState.looksLikeActiveTrip(snapshot)) {
             return ScreenAnalysis.empty(snapshot.sourceApp)
         }
 

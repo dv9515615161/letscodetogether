@@ -146,6 +146,13 @@ fun HomeScreen(
                     }
                 }
 
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { onChange { it.copy(incentiveTripsDone = 0) } },
+                    ) { Text("Reset count") }
+                    }
+                }
+
                 Text(
                     "You count the trips - RideScore reads offer screens and has no way " +
                         "to know a ride finished, so it will not guess.",
