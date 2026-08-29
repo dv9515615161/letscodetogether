@@ -87,6 +87,7 @@ object OverlayPresenter {
             buildList {
                 add("${Format.rupeesRounded(best.totalEarning)} · ${journeyLine(best)}")
                 add("${Format.rupees2(best.netPerKm)} net/km")
+                legsLine(best)?.let { add(it) }
                 // Say which rule held it back, so the driver can judge whether
                 // the rule is wrong rather than the offer.
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
@@ -121,8 +122,25 @@ object OverlayPresenter {
         )
     }
 
-    private fun journeyLine(a: RideAnalysis): String =
-        "${Format.decimal(a.totalDistanceKm)} km • ${Format.minutes(a.totalTimeMinutes)}"
+    /**
+     * A tilde marks a total that contains an estimate. Uber prints the minutes
+     * to the pickup, so its totals are exact; Rapido does not, so RideScore
+     * works those out from the pickup speed, and the driver should be able to
+     * tell the two apart at a glance.
+     */
+    private fun journeyLine(a: RideAnalysis): String {
+        val estimated = if (a.pickupTimeEstimated && a.pickupTimeMinutesCounted > 0.0) "~" else ""
+        return "${Format.decimal(a.totalDistanceKm)} km • $estimated${Format.minutes(a.totalTimeMinutes)}"
+    }
+
+    /** "4 min to pickup + 10 min trip", when both halves are known. */
+    private fun legsLine(a: RideAnalysis): String? {
+        val pickup = a.pickupTimeMinutesCounted
+        val trip = a.offer.tripTimeMinutes ?: return null
+        if (pickup <= 0.0) return null
+        val mark = if (a.pickupTimeEstimated) "~" else ""
+        return "$mark${pickup.toInt()} min to pickup + ${trip.toInt()} min trip"
+    }
 
     private fun checkReason(a: RideAnalysis): String {
         val missing = buildList {

@@ -133,6 +133,7 @@ class FareCalculator(
             reasons = outcome.reasons,
             notes = offer.notes + notes,
             pickupTimeEstimated = pickupTimeEstimated,
+            pickupTimeMinutesCounted = countedPickupMin,
             returnDistanceKm = returnKm,
             returnTimeMinutes = returnMin,
         )

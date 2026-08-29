@@ -25,7 +25,8 @@ class OverlayPresenterTest {
         assertEquals("₹112/hr", content.primary)
         assertEquals("net per hour, after fuel", content.primaryCaption)
         // The fare, distance and time follow it, smaller.
-        assertEquals("₹60 · 7.7 km • 19 min", content.detailLines[0])
+        // The tilde says the 19 contains an estimated pickup leg.
+        assertEquals("₹60 · 7.7 km • ~19 min", content.detailLines[0])
         assertEquals("₹4.59 net/km", content.detailLines[1])
     }
 
@@ -38,7 +39,7 @@ class OverlayPresenterTest {
         assertEquals("🟢 ACCEPT", content.header)
         assertTrue(content.primary.endsWith("/hr"))
         assertEquals(1, content.detailLines.size)
-        assertEquals("₹210 · 10 km • 26 min", content.detailLines[0])
+        assertEquals("₹210 · 10 km • ~26 min", content.detailLines[0])
         // Quick mode drops the caption; the header and the number carry it.
         assertEquals(null, content.primaryCaption)
     }

@@ -51,6 +51,11 @@ data class RideAnalysis(
     val notes: List<String> = emptyList(),
     /** True when pickup minutes were derived from pickup speed, not read on screen. */
     val pickupTimeEstimated: Boolean = false,
+    /**
+     * Pickup minutes actually counted in [totalTimeMinutes]. Uber prints this
+     * on the offer; Rapido does not, and it is estimated there.
+     */
+    val pickupTimeMinutesCounted: Double = 0.0,
     /** Unpaid kilometres assumed for riding back from the drop. Zero when off. */
     val returnDistanceKm: Double = 0.0,
     /** Unpaid minutes for that ride back. */

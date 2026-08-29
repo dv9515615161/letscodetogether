@@ -266,6 +266,14 @@ costs off — which is the default — "net" means "after fuel", and nothing mor
 is claimed.** Maintenance and platform commission are subtracted only if the
 driver switches them on.
 
+**A printed pickup time always wins over an estimate.** Uber gives both legs -
+`4 min (0.6 km)` to the pickup and `10 mins (3.1 km)` for the trip - so its
+totals are exact and the pickup-speed setting never comes into it. Rapido gives
+only the trip, so the pickup leg is worked out there. The card marks the
+difference: a total containing an estimate is shown with a tilde (`~19 min`),
+an exact one without, and the detailed card breaks out the two legs
+(`4 min to pickup + 10 min trip`).
+
 Estimated pickup time is rounded **up** to the whole minute, which is what the
 driver would see on their own clock: 1.8 km at 17 km/h is 6.35 minutes, counted
 as 7. That reproduces the worked example exactly (19 minutes total, ₹111.66
