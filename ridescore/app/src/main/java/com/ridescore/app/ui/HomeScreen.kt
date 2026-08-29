@@ -146,11 +146,8 @@ fun HomeScreen(
                     }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { onChange { it.copy(incentiveTripsDone = 0) } },
-                    ) { Text("Reset count") }
-                    }
+                OutlinedButton(onClick = { onChange { it.copy(incentiveTripsDone = 0) } }) {
+                    Text("Reset count")
                 }
 
                 Text(
