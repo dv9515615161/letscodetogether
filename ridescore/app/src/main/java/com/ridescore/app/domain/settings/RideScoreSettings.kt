@@ -115,6 +115,18 @@ data class RideScoreSettings(
      */
     val offerLogEnabled: Boolean = false,
 
+    // ---- Onboarding ------------------------------------------------------
+    /**
+     * Whether the driver has read and accepted the disclosure explaining what
+     * the accessibility service reads and what it does with it.
+     *
+     * Google Play requires this consent before an app may ask for accessibility
+     * access, and it is the right thing to show regardless: the driver is about
+     * to grant a permission that can read screens, and should be told plainly
+     * what will and will not be done with that.
+     */
+    val disclosureAccepted: Boolean = false,
+
     // ---- Confidence -----------------------------------------------------
     /** Below this, a result is never shown as ACCEPT. */
     val lowConfidenceThreshold: Float = 0.75f,

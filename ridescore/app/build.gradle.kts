@@ -1,8 +1,31 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Release signing comes from keystore.properties (never committed) or, in CI,
+// from environment variables. A build with neither still succeeds - it just
+// produces an unsigned release, which is what an open pull request should get.
+val keystoreProperties = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+// Blank counts as absent: a CI step that is skipped leaves its output as an
+// empty string rather than unsetting it, and an empty keystore path would fail
+// the build instead of falling back to an unsigned one.
+fun secret(key: String, env: String): String? =
+    (keystoreProperties.getProperty(key) ?: System.getenv(env))?.takeIf { it.isNotBlank() }
+
+val releaseStoreFile = secret("storeFile", "RIDESCORE_KEYSTORE")
+val releaseStorePassword = secret("storePassword", "RIDESCORE_KEYSTORE_PASSWORD")
+val releaseKeyAlias = secret("keyAlias", "RIDESCORE_KEY_ALIAS")
+val releaseKeyPassword = secret("keyPassword", "RIDESCORE_KEY_PASSWORD")
+val hasReleaseSigning = releaseStoreFile != null && releaseStorePassword != null &&
+    releaseKeyAlias != null && releaseKeyPassword != null
 
 android {
     namespace = "com.ridescore.app"
@@ -12,8 +35,10 @@ android {
         applicationId = "com.ridescore.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Bumped per release. Play rejects a bundle whose versionCode is not
+        // higher than the last one uploaded, so CI can override it.
+        versionCode = (project.findProperty("ridescoreVersionCode") as String?)?.toInt() ?: 1
+        versionName = (project.findProperty("ridescoreVersionName") as String?) ?: "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,6 +53,15 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
@@ -36,10 +70,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
-            // No signing config committed. Android Studio -> Build > Generate Signed Bundle / APK
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -54,6 +88,14 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    // Play delivers per-device slices from one bundle, which is what keeps the
+    // download small even though the OCR model is bundled.
+    bundle {
+        language { enableSplit = true }
+        density { enableSplit = true }
+        abi { enableSplit = true }
     }
 
     packaging {

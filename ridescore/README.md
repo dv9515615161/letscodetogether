@@ -41,6 +41,16 @@ finishes in under a millisecond.
 
 ---
 
+## Publishing
+
+Sideloading is why Play Protect blocks the install and why the accessibility
+switch starts greyed out. Both go away when the app is installed from Google
+Play, and only then. [`RELEASING.md`](RELEASING.md) covers the whole path -
+developer account, signing key, the accessibility declaration that is the real
+gate, and what a subscription needs - along with the risks worth knowing before
+spending money on any of it. Store copy is drafted in
+[`PLAY_LISTING.md`](PLAY_LISTING.md).
+
 ## Build and run
 
 The Android project is the `ridescore/` directory of this repository. (The

@@ -84,6 +84,7 @@ class SettingsRepository(private val context: Context) {
             appMode = this[Keys.APP_MODE]?.let { runCatching { AppMode.valueOf(it) }.getOrNull() } ?: d.appMode,
             ocrFallbackEnabled = this[Keys.OCR_ON] ?: d.ocrFallbackEnabled,
             offerLogEnabled = this[Keys.OFFER_LOG] ?: d.offerLogEnabled,
+            disclosureAccepted = this[Keys.DISCLOSURE] ?: d.disclosureAccepted,
             lowConfidenceThreshold = this[Keys.LOW_CONFIDENCE] ?: d.lowConfidenceThreshold,
             minUsableConfidence = this[Keys.MIN_CONFIDENCE] ?: d.minUsableConfidence,
             preferredDestinations = this[Keys.PREFERRED_DESTINATIONS]
@@ -124,6 +125,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.APP_MODE] = s.appMode.name
         this[Keys.OCR_ON] = s.ocrFallbackEnabled
         this[Keys.OFFER_LOG] = s.offerLogEnabled
+        this[Keys.DISCLOSURE] = s.disclosureAccepted
         this[Keys.LOW_CONFIDENCE] = s.lowConfidenceThreshold
         this[Keys.MIN_CONFIDENCE] = s.minUsableConfidence
         this[Keys.PREFERRED_DESTINATIONS] = s.preferredDestinations.joinToString("\n")
@@ -162,6 +164,7 @@ class SettingsRepository(private val context: Context) {
         val APP_MODE = stringPreferencesKey("app_mode")
         val OCR_ON = booleanPreferencesKey("ocr_fallback_enabled")
         val OFFER_LOG = booleanPreferencesKey("offer_log_enabled")
+        val DISCLOSURE = booleanPreferencesKey("disclosure_accepted")
         val LOW_CONFIDENCE = floatPreferencesKey("low_confidence_threshold")
         val MIN_CONFIDENCE = floatPreferencesKey("min_usable_confidence")
         val PREFERRED_DESTINATIONS = stringPreferencesKey("preferred_destinations")

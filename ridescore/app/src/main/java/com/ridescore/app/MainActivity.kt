@@ -37,6 +37,7 @@ import com.ridescore.app.domain.model.ScreenAnalysis
 import com.ridescore.app.engine.RideScoreEngine
 import com.ridescore.app.ocr.ScreenCaptureService
 import com.ridescore.app.tts.VoiceAnnouncer
+import com.ridescore.app.ui.DisclosureScreen
 import com.ridescore.app.ui.HomeScreen
 import com.ridescore.app.ui.PermissionState
 import com.ridescore.app.ui.SampleOffers
@@ -93,6 +94,17 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
 
                 LaunchedEffect(tab, settings.offerLogEnabled) { viewModel.refreshLogStats() }
+
+                // Play requires the accessibility disclosure to be accepted
+                // before the permission is offered, and the app should not be
+                // usable around it.
+                if (!settings.disclosureAccepted) {
+                    DisclosureScreen(
+                        onAccept = { viewModel.update { it.copy(disclosureAccepted = true) } },
+                        onOpenPrivacyPolicy = { openPrivacyPolicy() },
+                    )
+                    return@RideScoreTheme
+                }
 
                 RideScoreScaffold(
                     tab = tab,
@@ -206,12 +218,23 @@ class MainActivity : ComponentActivity() {
         projectionLauncher.launch(manager.createScreenCaptureIntent())
     }
 
+    private fun openPrivacyPolicy() {
+        runCatching {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+        }.onFailure {
+            Toast.makeText(this, PRIVACY_POLICY_URL, Toast.LENGTH_LONG).show()
+        }
+    }
+
     private fun previewVoice() {
         val announcer = voice ?: VoiceAnnouncer(applicationContext).also { voice = it }
         announcer.preview()
     }
 
     companion object {
+        /** Hosted from the repository's docs/ directory via GitHub Pages. */
+        const val PRIVACY_POLICY_URL = "https://dv9515615161.github.io/letscodetogether/privacy.html"
+
         fun isAccessibilityServiceEnabled(context: Context): Boolean {
             val expected = "${context.packageName}/${RideScoreAccessibilityService::class.java.name}"
             val enabled = Settings.Secure.getString(
