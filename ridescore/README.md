@@ -203,6 +203,20 @@ no commission, so they say nothing about how commission behaves on a parcel —
 and an advisory tool that guesses a deduction away overstates what the work
 pays, which is the error that talks a driver into a bad ride.
 
+### Screens RideScore stays off
+
+A plan page, the subscription page, a rate card and a finished order's receipt
+all carry rupee figures, and the parser used to lift them: in one log of 1,894
+offers, 153 rows carried fares no ride ever paid — ₹40,000, ₹5,400, ₹750,
+₹491.66 — scraped off pages like those. The card then covered the very text
+the driver had opened the page to read.
+
+The test is the **affordance, not the words**: a screen with something to
+accept is an offer screen, whatever else is printed on it. That matters,
+because Rapido's home screen shows a live offer and a "Low Balance — Orders
+will be blocked" banner at the same time, and a rule that went by words alone
+would have swallowed a real ₹45 delivery.
+
 Read your own numbers off any completed order's payment breakdown rather than
 copying the ones above; they will differ by city and by category. The settings
 screen shows what your figures come to on a ₹70 fare so you can check them

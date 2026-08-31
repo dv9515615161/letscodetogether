@@ -34,6 +34,13 @@ open class RideScoreEngine(
             return ScreenAnalysis.empty(snapshot.sourceApp)
         }
 
+        // Nor is a plan page, a rate card, a finished order's receipt or a
+        // status toast. They carry rupee figures and no ride, and a card over
+        // them is worse than useless - it covers the page being read.
+        if (TripState.looksLikeNonOfferScreen(snapshot)) {
+            return ScreenAnalysis.empty(snapshot.sourceApp)
+        }
+
         val parser = registry.parserFor(snapshot)
             ?: return ScreenAnalysis.empty(snapshot.sourceApp)
 

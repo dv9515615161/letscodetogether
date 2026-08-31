@@ -397,12 +397,22 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
         if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.2f", v)
 
     companion object {
-        // Confidence weights. They add up to 1.0 for a fully readable offer.
-        const val W_FARE = 0.40f
-        const val W_TRIP_KM = 0.25f
-        const val W_TRIP_MIN = 0.20f
-        const val W_PICKUP_KM = 0.10f
-        const val W_PICKUP_MIN = 0.05f
+        /*
+         * Confidence weights, adding to 1.0 for a fully readable offer.
+         *
+         * Weighted by what the money depends on, not by how full the screen
+         * is. The fare and the distances decide the answer; the durations are
+         * estimated from the distances when an app does not print them, and
+         * the card marks an estimate with a tilde. So a missing duration is
+         * not evidence of a bad read - on Rapido it is simply the usual
+         * layout, and a real ₹45 delivery with both distances and an Accept
+         * button was being held back from ACCEPT for it.
+         */
+        const val W_FARE = 0.45f
+        const val W_TRIP_KM = 0.30f
+        const val W_TRIP_MIN = 0.07f
+        const val W_PICKUP_KM = 0.15f
+        const val W_PICKUP_MIN = 0.03f
 
         const val POSITIONAL_PENALTY = 0.10f
         const val MISMATCH_PENALTY = 0.15f
