@@ -168,11 +168,16 @@ which a driver reading "0% commission" would never guess. So the taxes
 percentage and the flat per-order fee apply on **both** plans, and only the
 commission is plan-dependent.
 
-**Parcel orders are the exception.** On the same payout screens a parcel
-order's fare and its earning are the same number — ₹57 paid ₹57, ₹130 paid
-₹130, nothing deducted. RideScore reads the ride type off the offer and skips
-the deduction for parcel and delivery work; the behaviour can be switched off
-if a platform starts charging on it.
+**Parcel orders pay no tax.** On the same payout screens a parcel order's fare
+and its earning are the same number — ₹57 paid ₹57, ₹130 paid ₹130. RideScore
+reads the ride type off the offer and skips the taxes and the flat fee on
+parcel and delivery work; the behaviour can be switched off if a platform
+starts charging on it.
+
+Commission is *not* skipped. Both parcels seen were on the plan that charges
+no commission, so they say nothing about how commission behaves on a parcel —
+and an advisory tool that guesses a deduction away overstates what the work
+pays, which is the error that talks a driver into a bad ride.
 
 Read your own numbers off any completed order's payment breakdown rather than
 copying the ones above; they will differ by city and by category. The settings

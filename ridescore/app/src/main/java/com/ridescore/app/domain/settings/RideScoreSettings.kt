@@ -147,6 +147,12 @@ data class RideScoreSettings(
      * the same number, while a bike ride of the same size loses about a tenth.
      * On by default so a driver who enters their ride deductions does not have
      * them wrongly applied to parcel work.
+     *
+     * Only the taxes and the flat fee are waived. The commission is not: both
+     * observed parcel orders were on the plan that charges no commission, so
+     * they say nothing about how commission behaves on a parcel, and guessing
+     * it away would overstate what the order pays. Overstating is the worse
+     * error - it talks a driver into work that is not worth the ride.
      */
     val parcelOrdersExempt: Boolean = true,
 
@@ -266,13 +272,22 @@ data class RideScoreSettings(
     /**
      * What the platform keeps from a fare of this size, in rupees.
      *
-     * @param isParcel parcel and delivery jobs, which are deducted differently
-     *   - on Rapido, not at all.
+     * @param isParcel parcel and delivery jobs, which pay no taxes and no flat
+     *   fee. Commission, where the plan charges one, still applies.
      */
     fun deductionOn(fare: Double, isParcel: Boolean = false): Double {
-        if (isParcel && parcelOrdersExempt) return 0.0
-        return (fare * totalDeductionPercent / 100.0 + perOrderFee).coerceIn(0.0, fare)
+        val commission = fare * effectiveCommissionPercent / 100.0
+        val taxesAndFees = if (isParcel && parcelOrdersExempt) {
+            0.0
+        } else {
+            fare * taxesAndFeesPercent / 100.0 + perOrderFee
+        }
+        return (commission + taxesAndFees).coerceIn(0.0, fare)
     }
+
+    /** What a parcel order escapes, in rupees, on a fare of this size. */
+    fun parcelSavingOn(fare: Double): Double =
+        (fare * taxesAndFeesPercent / 100.0 + perOrderFee).coerceAtLeast(0.0)
 
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double

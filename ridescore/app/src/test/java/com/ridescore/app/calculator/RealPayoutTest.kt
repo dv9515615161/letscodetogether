@@ -28,7 +28,10 @@ import org.junit.Test
  * bought, and a driver reading "0% commission" would never guess it.
  *
  * Parcel orders are the exception - ₹57 paid ₹57, ₹130 paid ₹130, nothing
- * deducted at all.
+ * deducted at all. Both were on this same 0%-commission plan, so what they
+ * establish is that the *tax* and the flat fee are absent; they cannot say
+ * whether a commission plan would still take its cut, so RideScore keeps
+ * charging that one.
  */
 class RealPayoutTest {
 
@@ -56,7 +59,7 @@ class RealPayoutTest {
     }
 
     @Test
-    fun `a parcel order keeps its whole fare`() {
+    fun `a parcel order on the zero-commission plan keeps its whole fare`() {
         val parcel = offer(totalFare = 130.0).copy(rideType = "Parcel Delivery")
         val analysis = calculator.analyse(parcel, earningsPlan)
 
@@ -68,6 +71,23 @@ class RealPayoutTest {
         // The same fare as a bike ride loses about a tenth.
         val ride = calculator.analyse(offer(totalFare = 130.0), earningsPlan)
         assertEquals(8.92, ride.platformFee, 0.02)
+    }
+
+    @Test
+    fun `a parcel on the commission plan still pays commission, but no tax`() {
+        val commissionPlan = earningsPlan.copy(
+            earningsPlan = EarningsPlan.COMMISSION,
+            commissionPercent = 16.0,
+            gstOnCommissionPercent = 18.0,
+        )
+        val parcel = offer(totalFare = 130.0).copy(rideType = "Parcel Delivery")
+
+        // 18.88% of 130 = 24.54 - the commission and its GST, and nothing else.
+        assertEquals(24.54, calculator.analyse(parcel, commissionPlan).platformFee, 0.02)
+
+        // A bike ride of the same fare pays that plus 4.65% + Rs.2.87 = 8.92.
+        val ride = calculator.analyse(offer(totalFare = 130.0), commissionPlan)
+        assertEquals(24.54 + 8.92, ride.platformFee, 0.03)
     }
 
     @Test

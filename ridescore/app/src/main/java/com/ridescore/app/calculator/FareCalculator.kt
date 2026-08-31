@@ -90,8 +90,11 @@ class FareCalculator(
         // plus taxes and fees, which are taken on either plan. Charged on the
         // fare, not on a bonus.
         val platformFee = s.deductionOn(gross, offer.looksLikeParcel)
-        if (offer.looksLikeParcel && s.parcelOrdersExempt && s.totalDeductionPercent > 0.0) {
-            notes += "Parcel order: no platform deduction applied"
+        if (offer.looksLikeParcel && s.parcelOrdersExempt && s.parcelSavingOn(gross) > 0.0) {
+            // Parcels pay no tax and no flat fee. Commission, where the plan
+            // charges one, is still taken - so this note says tax, not "no
+            // deduction".
+            notes += "Parcel order: no tax or fee deducted"
         }
         val fuelCost = costedKm * s.fuelCostPerKm
         val maintenanceCost = if (s.maintenanceEnabled) costedKm * s.maintenancePerKm else 0.0

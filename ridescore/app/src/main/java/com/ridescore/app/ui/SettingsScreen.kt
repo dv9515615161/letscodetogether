@@ -181,10 +181,11 @@ fun SettingsScreen(
             }
 
             SwitchRow(
-                label = "Parcel orders are exempt",
+                label = "Parcel orders pay no tax",
                 checked = settings.parcelOrdersExempt,
                 description = "On Rapido's payout screens a parcel order's fare and its " +
-                    "earning are the same number - nothing is taken.",
+                    "earning are the same number. Taxes and the flat fee are skipped; " +
+                    "commission, if your plan charges one, is still taken.",
             ) { on -> onChange { it.copy(parcelOrdersExempt = on) } }
 
             // Checkable against any completed order's payment breakdown.
