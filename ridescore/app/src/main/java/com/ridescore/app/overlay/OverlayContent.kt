@@ -78,6 +78,7 @@ object OverlayPresenter {
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("${Format.rupees2(best.netPerKm)}/km · under ${Format.rupeesRounded(settings.minNetPerKm)}")
                 }
+                trafficLine(best)?.let { add(it) }
                 if (best.includesIncentive) {
                     add("₹${best.grossEarning.toInt()} + ₹${best.incentiveEarning.toInt()} bonus")
                 }
@@ -93,6 +94,7 @@ object OverlayPresenter {
                 if (best.reasons.contains(DecisionReason.PER_KM_TOO_LOW)) {
                     add("under ${Format.rupeesRounded(settings.minNetPerKm)}/km target")
                 }
+                trafficLine(best)?.let { add(it) }
                 if (best.includesIncentive) {
                     add("₹${best.incentiveEarning.toInt()} of that is bonus")
                 }
@@ -146,6 +148,21 @@ object OverlayPresenter {
         val pickupMark = if (a.pickupTimeEstimated) "~" else ""
         val tripMark = if (a.tripTimeEstimated) "~" else ""
         return "$pickupMark${pickup.toInt()} min to pickup + $tripMark${trip.toInt()} min trip"
+    }
+
+    /**
+     * "₹142/hr in traffic" - what the same offer pays if the road is slow.
+     *
+     * Shown only when the duration was estimated and the slow case is
+     * materially worse, because that is exactly when the headline figure is a
+     * promise nobody made. A driver who can see both numbers can decide for
+     * themselves whether the road ahead looks like the good one or the bad
+     * one; a driver shown only the average cannot.
+     */
+    private fun trafficLine(a: RideAnalysis): String? {
+        if (!a.tripTimeEstimated) return null
+        if (a.netPerHourInTraffic >= a.netPerHour - 1.0) return null
+        return "${Format.rupeesRounded(a.netPerHourInTraffic)}/hr in traffic"
     }
 
     private fun hasEstimate(a: RideAnalysis): Boolean =

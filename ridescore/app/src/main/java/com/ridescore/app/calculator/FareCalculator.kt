@@ -48,16 +48,25 @@ class FareCalculator(
         // between calling that ride a MAYBE and calling it the reject it is.
         val tripTimeEstimated = offer.tripTimeMinutes == null && tripKm > 0.0
         val tripMin = offer.tripTimeMinutes
-            ?: estimateRidingMinutes(tripKm, s.tripSpeedKmph)
+            ?: estimateRidingMinutes(tripKm, s.tripSpeedFor(tripKm))
+        // The same trip when the roads are full. Only differs from tripMin
+        // when the duration was estimated - a printed one is taken as read.
+        val slowTripMin =
+            if (tripTimeEstimated) estimateRidingMinutes(tripKm, s.slowTripSpeedFor(tripKm))
+            else tripMin
         val pickupTimeEstimated = offer.pickupTimeMinutes == null && pickupKm > 0.0
         val pickupMin = offer.pickupTimeMinutes
             ?: estimateRidingMinutes(pickupKm, s.pickupSpeedKmph)
         val countedPickupMin = if (s.includePickupTime) pickupMin else 0.0
         val totalMin = tripMin + countedPickupMin
+        val slowTotalMin = slowTripMin + countedPickupMin
 
         if (tripTimeEstimated) {
             notes += "Trip time estimated at ${fmtMinutes(tripMin)} min " +
-                "(${fmtKmph(s.tripSpeedKmph)} km/h) - the offer did not show it"
+                "(${fmtKmph(s.tripSpeedFor(tripKm))} km/h) - the offer did not show it"
+            if (slowTripMin > tripMin) {
+                notes += "In heavy traffic nearer ${fmtMinutes(slowTripMin)} min"
+            }
         }
         if (pickupTimeEstimated && s.includePickupTime) {
             notes += "Pickup time estimated at ${fmtMinutes(pickupMin)} min (${fmtKmph(s.pickupSpeedKmph)} km/h)"
@@ -87,6 +96,7 @@ class FareCalculator(
         // ride back. Only the paid leg earns.
         val costedKm = totalKm + returnKm
         val spentMin = totalMin + returnMin
+        val slowSpentMin = slowTotalMin + returnMin
 
         val gross = offer.totalFare ?: 0.0
 
@@ -120,6 +130,10 @@ class FareCalculator(
         val hours = spentMin / 60.0
         val grossPerHour = if (hours > 0.0) earned / hours else 0.0
         val netPerHour = if (hours > 0.0) net / hours else 0.0
+        // Same money, more minutes. The distance does not change, so neither
+        // does the fuel - only the hourly rate suffers.
+        val slowHours = slowSpentMin / 60.0
+        val netPerHourInTraffic = if (slowHours > 0.0) net / slowHours else 0.0
         val grossPerKm = if (costedKm > 0.0) earned / costedKm else 0.0
         val netPerKm = if (costedKm > 0.0) net / costedKm else 0.0
 
@@ -131,6 +145,8 @@ class FareCalculator(
                 netPerHour = netPerHour,
                 netPerKm = netPerKm,
                 confidence = offer.confidence,
+                netPerHourInTraffic = netPerHourInTraffic,
+                timeEstimated = tripTimeEstimated,
             ),
             s,
         )
@@ -156,6 +172,8 @@ class FareCalculator(
             pickupTimeEstimated = pickupTimeEstimated,
             tripTimeEstimated = tripTimeEstimated,
             tripTimeMinutesCounted = tripMin,
+            netPerHourInTraffic = netPerHourInTraffic,
+            totalTimeMinutesInTraffic = slowSpentMin,
             pickupTimeMinutesCounted = countedPickupMin,
             returnDistanceKm = returnKm,
             returnTimeMinutes = returnMin,

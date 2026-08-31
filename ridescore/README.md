@@ -203,6 +203,45 @@ no commission, so they say nothing about how commission behaves on a parcel —
 and an advisory tool that guesses a deduction away overstates what the work
 pays, which is the error that talks a driver into a bad ride.
 
+### An estimated time is not a promise
+
+When an offer prints no duration RideScore estimates one — and an estimate made
+at the average speed is a promise the traffic may not keep. From 172 offers
+that printed both a distance and a duration:
+
+| Hour | Median speed |
+|---|---|
+| 07:00 | 30.2 km/h |
+| 08:00 | 20.6 km/h |
+| **09:00** | **14.2 km/h** |
+
+At 09:00 — the busiest hour in that log — the road runs at **half** the daily
+average. A 12 km trip takes 51 minutes, not 30, so an offer sold at ₹150 an
+hour pays ₹88. No single speed can be right for both ends of that.
+
+Two things follow, and both are in the app:
+
+**Speed depends on the trip's length.** Under 2 km the measured median is
+14.9 km/h; from 2 to 5 km, 22.0; over 5 km, 32.6. Short hops are slow per km —
+the lights, the turn into the lane, the last hundred metres looking for a gate
+— and they are the majority: 100 of those 172 were under 5 km. One average
+across all of them understates a short trip's minutes by half.
+
+**ACCEPT has to survive the slow case.** When the duration was estimated, the
+offer is scored twice: once at the usual speed and once at 60% of it, which is
+that 09:00 road. ACCEPT is shown only if it clears your hourly target *both*
+times. Anything that clears only on a good run is a MAYBE, with the second
+figure printed underneath — "₹139/hr in traffic" — so the risk is visible
+rather than hidden inside a green light. A duration the app actually printed is
+a fact and is never stress-tested.
+
+Replaying the 1,179 scoreable offers in that log through this: **201 of the 239
+ACCEPTs are withdrawn**, nearly all to MAYBE. Those were green lights that
+depended on the road being empty.
+
+Both parts are adjustable under **Settings ▸ Riding speeds**, and the stress
+test can be switched off if you would rather see the optimistic answer.
+
 ### Screens RideScore stays off
 
 A plan page, the subscription page, a rate card and a finished order's receipt

@@ -68,9 +68,32 @@ class DeliveryOfferConfidenceTest {
     fun `so it gets a real answer instead of CHECK`() {
         val analysis = engine.analyse(rapido(screen), RideScoreSettings.DEFAULT).ranked.first()
         assertTrue(analysis.decision != Decision.CHECK)
-        // 1.9 km at 24 km/h = 5 min, plus 3 min to a 0.6 km pickup at 17.
         assertTrue(analysis.tripTimeEstimated)
-        assertEquals(8.0, analysis.totalTimeMinutes, 0.001)
+        // A 1.9 km hop is short work: 24 x 0.62 = 14.9 km/h, so 8 minutes,
+        // plus 3 to reach a 0.6 km pickup at 17.
+        assertEquals(8.0, analysis.tripTimeMinutesCounted, 0.001)
+        assertEquals(11.0, analysis.totalTimeMinutes, 0.001)
+    }
+
+    @Test
+    fun `it is a MAYBE, not an ACCEPT, because the time was guessed`() {
+        val analysis = engine.analyse(rapido(screen), RideScoreSettings.DEFAULT).ranked.first()
+
+        // ₹202/hr if the road runs, ₹139 if it does not. The bar is ₹150, so
+        // this one is only worth taking on a good run - which is a MAYBE, and
+        // the card says "₹139/hr in traffic" underneath so the driver can see
+        // why. Nothing else holds it back: ₹14.80/km clears the ₹9 floor.
+        assertEquals(201.8, analysis.netPerHour, 0.5)
+        assertEquals(138.8, analysis.netPerHourInTraffic, 0.5)
+        assertEquals(14.8, analysis.netPerKm, 0.05)
+        assertEquals(Decision.MAYBE, analysis.decision)
+
+        // Turn the stress test off and it is the ACCEPT it looks like.
+        val relaxed = engine.analyse(
+            rapido(screen),
+            RideScoreSettings.DEFAULT.copy(requireAcceptToSurviveTraffic = false),
+        ).ranked.first()
+        assertEquals(Decision.ACCEPT, relaxed.decision)
     }
 
     @Test

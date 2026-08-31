@@ -68,17 +68,43 @@ data class RideScoreSettings(
 
     // ---- Journey assumptions -------------------------------------------
     val pickupSpeedKmph: Double = DEFAULT_PICKUP_SPEED,
-
     /**
-     * Riding speed on the paid leg, used only when the offer does not print
-     * the trip minutes.
+     * How fast the paid leg moves, used only when an offer does not print its
+     * duration. The anchor for a whole family of speeds - see [tripSpeedFor].
      *
      * Faster than the pickup speed on purpose: riding to a pickup means
-     * hunting for a gate and a customer, while the trip itself is a straight
-     * run. Measured from 172 distinct real offers in a ride log that stated
-     * both the distance and the minutes - median 24 km/h, quartiles 19 and 33.
+     * hunting for a gate and a customer, while the trip itself is a run.
+     * Measured from 172 distinct real offers that stated both the distance and
+     * the minutes - median 24 km/h, quartiles 19 and 33.
      */
     val tripSpeedKmph: Double = DEFAULT_TRIP_SPEED,
+    /**
+     * What the same road is worth in bad traffic, as a fraction of the usual
+     * speed. 0.6 of 24 km/h is 14 km/h.
+     *
+     * Not a guess: in 172 offers that printed both a distance and a duration,
+     * the driver's median speed was 30.2 km/h at 07:00 and **14.2 at 09:00**.
+     * The morning peak is a little over half the early-morning speed, and the
+     * slowest tenth of all offers sat at 14.0. So this is what the same ride
+     * costs in time when the roads are full.
+     */
+    val slowTrafficFactor: Double = DEFAULT_SLOW_TRAFFIC_FACTOR,
+    /**
+     * Whether ACCEPT must survive the slow-traffic case.
+     *
+     * When an offer prints no duration RideScore estimates one, and an
+     * estimate made at the usual speed is a promise the traffic may not keep:
+     * at 09:00 a 12 km trip takes 51 minutes, not the 32 the average predicts,
+     * and an offer sold as Rs.150/hr pays Rs.94. With this on, ACCEPT is shown
+     * only when the offer still clears the bar at [slowTrafficFactor] speed.
+     * Anything that clears only on a good run is a MAYBE, which is the honest
+     * answer: it might be worth it, and it depends on the road.
+     *
+     * Only ever applies to an *estimated* time. A duration printed by the app
+     * is taken as read and never stress-tested.
+     */
+    val requireAcceptToSurviveTraffic: Boolean = true,
+
     val includePickupDistance: Boolean = true,
     val includePickupTime: Boolean = true,
 
@@ -335,6 +361,36 @@ data class RideScoreSettings(
     fun parcelSavingOn(fare: Double): Double =
         (fare * taxesAndFeesPercent / 100.0 + perOrderFee).coerceAtLeast(0.0)
 
+    /**
+     * The speed to assume for a trip of this length.
+     *
+     * A single number cannot describe both ends of the day's work. Measured
+     * over 172 offers that printed a distance and a duration:
+     *
+     * | Trip | Median speed |
+     * |---|---|
+     * | under 2 km | 14.9 km/h |
+     * | 2 to 5 km | 22.0 km/h |
+     * | over 5 km | 32.6 km/h |
+     *
+     * Short hops are slow per km - the traffic lights, the turning into a
+     * lane, the last hundred metres looking for a gate - and they are also the
+     * majority: 100 of those 172 were under 5 km. Assuming one average speed
+     * across all of them understates a short trip's minutes by half.
+     *
+     * The bands scale off [tripSpeedKmph] so the driver still has one number
+     * to turn if their city is faster or slower than this one.
+     */
+    fun tripSpeedFor(tripKm: Double): Double = tripSpeedKmph * when {
+        tripKm < SHORT_TRIP_KM -> SHORT_TRIP_FACTOR
+        tripKm < MEDIUM_TRIP_KM -> MEDIUM_TRIP_FACTOR
+        else -> LONG_TRIP_FACTOR
+    }
+
+    /** The same trip when the roads are full. */
+    fun slowTripSpeedFor(tripKm: Double): Double =
+        tripSpeedFor(tripKm) * slowTrafficFactor.coerceIn(0.1, 1.0)
+
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double
         get() = if (mileageKmPerLitre > 0.0) petrolPricePerLitre / mileageKmPerLitre else 0.0
@@ -352,7 +408,8 @@ data class RideScoreSettings(
         maybeNetPerHour = maybeNetPerHour.coerceIn(0.0, acceptNetPerHour),
         minNetPerKm = minNetPerKm.coerceIn(0.0, 1_000.0),
         pickupSpeedKmph = pickupSpeedKmph.coerceIn(3.0, 80.0),
-        tripSpeedKmph = tripSpeedKmph.coerceIn(3.0, 100.0),
+        tripSpeedKmph = tripSpeedKmph.coerceIn(3.0, 80.0),
+        slowTrafficFactor = slowTrafficFactor.coerceIn(0.2, 1.0),
         incentiveBonus = incentiveBonus.coerceIn(0.0, 100_000.0),
         incentiveTripsTarget = incentiveTripsTarget.coerceIn(0, 200),
         incentiveTripsDone = incentiveTripsDone.coerceIn(0, 200),
@@ -377,8 +434,20 @@ data class RideScoreSettings(
         const val DEFAULT_MIN_NET_PER_KM = 9.0
         const val DEFAULT_PICKUP_SPEED = 17.0
 
-        /** Median of 172 real offers that stated both km and minutes. */
+        /** Median of 172 real offers that printed both distance and duration. */
         const val DEFAULT_TRIP_SPEED = 24.0
+
+        /** 0.6 x 24 = 14.4 km/h, the 09:00 median and the slowest tenth. */
+        const val DEFAULT_SLOW_TRAFFIC_FACTOR = 0.6
+
+        // Trip-length speed bands, as multiples of the anchor speed. 24 km/h
+        // becomes 14.9, 22.1 and 31.7 - the three measured medians.
+        const val SHORT_TRIP_KM = 2.0
+        const val MEDIUM_TRIP_KM = 5.0
+        const val SHORT_TRIP_FACTOR = 0.62
+        const val MEDIUM_TRIP_FACTOR = 0.92
+        const val LONG_TRIP_FACTOR = 1.32
+
         const val DEFAULT_MAINTENANCE_PER_KM = 1.5
         const val DEFAULT_COMMISSION_PERCENT = 16.0
 

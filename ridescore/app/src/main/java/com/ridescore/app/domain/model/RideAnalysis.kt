@@ -20,6 +20,8 @@ enum class DecisionReason {
     MISSING_FARE,
     MISSING_DISTANCE,
     MISSING_TIME,
+    /** Clears the bar at the usual speed, but not in traffic. */
+    FAILS_IN_TRAFFIC,
 }
 
 /**
@@ -60,6 +62,14 @@ data class RideAnalysis(
     val tripTimeEstimated: Boolean = false,
     /** Trip minutes counted, read or estimated. */
     val tripTimeMinutesCounted: Double = 0.0,
+    /**
+     * What the hour is worth if the road is as slow as this driver's worst
+     * traffic. Equal to [netPerHour] whenever the offer printed its own
+     * duration - there is nothing to stress-test then.
+     */
+    val netPerHourInTraffic: Double = 0.0,
+    /** Total minutes under that same slow assumption. */
+    val totalTimeMinutesInTraffic: Double = 0.0,
     /**
      * Pickup minutes actually counted in [totalTimeMinutes]. Uber prints this
      * on the offer; Rapido does not, and it is estimated there.

@@ -96,6 +96,29 @@ fun SettingsScreen(
             NumberField("Trip speed", settings.tripSpeedKmph, "km/h", 1) { v ->
                 onChange { it.copy(tripSpeedKmph = v) }
             }
+            Text(
+                "Short trips are assumed slower than long ones: on this speed a " +
+                    "1.5 km hop is ${Format.decimal(settings.tripSpeedFor(1.5), 1)} km/h " +
+                    "and a 9 km run ${Format.decimal(settings.tripSpeedFor(9.0), 1)} km/h. " +
+                    "Measured from real offers - the last hundred metres cost the " +
+                    "same minutes whether the ride was long or short.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            NumberField(
+                "Speed in heavy traffic",
+                settings.slowTrafficFactor * 100.0,
+                "% of the above",
+                0,
+            ) { v -> onChange { it.copy(slowTrafficFactor = v / 100.0) } }
+            SwitchRow(
+                label = "ACCEPT must survive traffic",
+                checked = settings.requireAcceptToSurviveTraffic,
+                description = "When an offer does not print its trip time, show ACCEPT " +
+                    "only if it still clears your hourly target at the slower speed. " +
+                    "Offers that clear only on a good run show MAYBE, with the " +
+                    "traffic rate underneath. Never applies to a time the app printed.",
+            ) { on -> onChange { it.copy(requireAcceptToSurviveTraffic = on) } }
             SwitchRow("Include pickup distance", settings.includePickupDistance) { on ->
                 onChange { it.copy(includePickupDistance = on) }
             }
