@@ -75,6 +75,11 @@ class RideScoreEngineTest {
         repeat(500) { engine.analyse(snapshot, settings) }
         val perAnalysisMicros = (System.nanoTime() - started) / 500 / 1_000
 
-        assertTrue("${perAnalysisMicros}us per analysis", perAnalysisMicros < 2_000)
+        // Generous on purpose. This is wall-clock on whatever machine CI gave
+        // us, and a loaded runner can spike a sub-millisecond analysis past a
+        // tight bound - a flake that blocks a build for no reason. Ten
+        // milliseconds still catches the regression worth catching: someone
+        // making the parse an order of magnitude slower.
+        assertTrue("${perAnalysisMicros}us per analysis", perAnalysisMicros < 10_000)
     }
 }

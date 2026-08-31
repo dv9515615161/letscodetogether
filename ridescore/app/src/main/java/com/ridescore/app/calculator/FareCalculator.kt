@@ -85,8 +85,14 @@ class FareCalculator(
         val incentive = if (gross > 0.0) s.incentivePerTrip else 0.0
         val earned = gross + incentive
 
-        // Commission is charged on fares, not on bonuses.
-        val platformFee = if (s.platformFeeEnabled) gross * s.platformFeePercent / 100.0 else 0.0
+        // Commission is charged on fares, not on bonuses. The flat part is a
+        // per-order handling fee, which hurts small orders far more than a
+        // percentage does - and never takes more than the order paid.
+        val platformFee = if (s.platformFeeEnabled) {
+            (gross * s.platformFeePercent / 100.0 + s.platformFeeFixed).coerceAtMost(gross)
+        } else {
+            0.0
+        }
         val fuelCost = costedKm * s.fuelCostPerKm
         val maintenanceCost = if (s.maintenanceEnabled) costedKm * s.maintenancePerKm else 0.0
         val net = earned - platformFee - fuelCost - maintenanceCost

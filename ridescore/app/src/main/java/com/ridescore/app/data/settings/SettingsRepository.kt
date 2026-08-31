@@ -72,6 +72,7 @@ class SettingsRepository(private val context: Context) {
             maintenancePerKm = this[Keys.MAINTENANCE_PER_KM] ?: d.maintenancePerKm,
             platformFeeEnabled = this[Keys.PLATFORM_FEE_ON] ?: d.platformFeeEnabled,
             platformFeePercent = this[Keys.PLATFORM_FEE_PCT] ?: d.platformFeePercent,
+            platformFeeFixed = this[Keys.PLATFORM_FEE_FIXED] ?: d.platformFeeFixed,
             overlayEnabled = this[Keys.OVERLAY_ON] ?: d.overlayEnabled,
             overlayMode = this[Keys.OVERLAY_MODE]?.let { runCatching { OverlayMode.valueOf(it) }.getOrNull() }
                 ?: d.overlayMode,
@@ -115,6 +116,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.MAINTENANCE_PER_KM] = s.maintenancePerKm
         this[Keys.PLATFORM_FEE_ON] = s.platformFeeEnabled
         this[Keys.PLATFORM_FEE_PCT] = s.platformFeePercent
+        this[Keys.PLATFORM_FEE_FIXED] = s.platformFeeFixed
         this[Keys.OVERLAY_ON] = s.overlayEnabled
         this[Keys.OVERLAY_MODE] = s.overlayMode.name
         this[Keys.QUICK_DETAILS] = s.overlayShowDetailsInQuickMode
@@ -156,6 +158,7 @@ class SettingsRepository(private val context: Context) {
         val MAINTENANCE_PER_KM = doublePreferencesKey("maintenance_per_km")
         val PLATFORM_FEE_ON = booleanPreferencesKey("platform_fee_enabled")
         val PLATFORM_FEE_PCT = doublePreferencesKey("platform_fee_percent")
+        val PLATFORM_FEE_FIXED = doublePreferencesKey("platform_fee_fixed")
         val OVERLAY_ON = booleanPreferencesKey("overlay_enabled")
         val OVERLAY_MODE = stringPreferencesKey("overlay_mode")
         val QUICK_DETAILS = booleanPreferencesKey("quick_mode_details")

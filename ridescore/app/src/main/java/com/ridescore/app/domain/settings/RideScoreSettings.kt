@@ -84,6 +84,14 @@ data class RideScoreSettings(
     val maintenancePerKm: Double = DEFAULT_MAINTENANCE_PER_KM,
     val platformFeeEnabled: Boolean = false,
     val platformFeePercent: Double = DEFAULT_PLATFORM_FEE_PERCENT,
+    /**
+     * A flat amount the platform keeps from every order, whatever its size.
+     *
+     * Rapido's rate card charges a handling fee per order alongside its
+     * percentage commission, and a percentage alone cannot express that: on a
+     * ₹38 order a ₹5 flat fee is 13%, on a ₹142 order it is 3.5%.
+     */
+    val platformFeeFixed: Double = 0.0,
 
     // ---- Output ---------------------------------------------------------
     val overlayEnabled: Boolean = true,
@@ -192,6 +200,7 @@ data class RideScoreSettings(
         overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),
         maintenancePerKm = maintenancePerKm.coerceIn(0.0, 100.0),
         platformFeePercent = platformFeePercent.coerceIn(0.0, 90.0),
+        platformFeeFixed = platformFeeFixed.coerceIn(0.0, 1_000.0),
     )
 
     companion object {

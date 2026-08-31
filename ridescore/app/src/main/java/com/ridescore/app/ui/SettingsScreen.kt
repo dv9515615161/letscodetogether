@@ -145,9 +145,12 @@ fun SettingsScreen(
                 enabled = settings.maintenanceEnabled,
             ) { v -> onChange { it.copy(maintenancePerKm = v) } }
 
-            SwitchRow("Platform fee / commission", settings.platformFeeEnabled) { on ->
-                onChange { it.copy(platformFeeEnabled = on) }
-            }
+            SwitchRow(
+                label = "Platform fee / commission",
+                checked = settings.platformFeeEnabled,
+                description = "Only if the fare on the offer is before the platform's cut. " +
+                    "If what you are shown is already what reaches your wallet, leave this off.",
+            ) { on -> onChange { it.copy(platformFeeEnabled = on) } }
             NumberField(
                 "Platform fee",
                 settings.platformFeePercent,
@@ -155,6 +158,14 @@ fun SettingsScreen(
                 1,
                 enabled = settings.platformFeeEnabled,
             ) { v -> onChange { it.copy(platformFeePercent = v) } }
+
+            NumberField(
+                "Fixed fee per order",
+                settings.platformFeeFixed,
+                "₹",
+                2,
+                enabled = settings.platformFeeEnabled,
+            ) { v -> onChange { it.copy(platformFeeFixed = v) } }
         }
 
         SectionCard(title = "Overlay") {
