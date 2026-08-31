@@ -148,8 +148,29 @@ inside Rapido shows which you are on, under *Rapido's Commission*. On the
 commission plan every figure RideScore shows is about a fifth too high until
 this is set, so it asks rather than assuming.
 
-The default is the earnings plan, whose per-order deduction is nothing — so
-RideScore never invents a cut the driver did not tell it about.
+**0% commission does not mean the fare is yours.** Rapido's payout screens show
+a *Government Taxes and Other Fees* line that comes off on either plan, even
+when the commission is zero. Three real orders from one morning on the earnings
+plan:
+
+| Customer fare | Taxes and other fees | Reached the driver |
+|---|---|---|
+| ₹73 | −₹6.29 | ₹66.71 |
+| ₹51 | −₹5.24 | ₹45.76 |
+| ₹74 | −₹6.33 | ₹67.67 |
+
+Those fit **₹2.82 + 4.74% of the fare** to within a paisa — about a tenth of a
+small order, gone before any petrol is bought, which a driver reading "0%
+commission" would never guess. So the taxes percentage and the flat per-order
+fee apply on **both** plans, and only the commission is plan-dependent.
+
+Read your own numbers off any completed order's payment breakdown rather than
+copying the ones above; they will differ by city and by category. The settings
+screen shows what your figures come to on a ₹70 fare so you can check them
+against a real payout in seconds.
+
+The default is nothing deducted at all — so RideScore never invents a cut the
+driver did not tell it about.
 
 **The daily plan fee is deliberately not subtracted from individual offers.**
 Once the day's fee is paid it is spent whichever order comes next, so it has no

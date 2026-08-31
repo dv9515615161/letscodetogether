@@ -85,15 +85,11 @@ class FareCalculator(
         val incentive = if (gross > 0.0) s.incentivePerTrip else 0.0
         val earned = gross + incentive
 
-        // The fare on an offer card is what the customer pays, so on the
-        // commission plan a slice of it never reaches the driver. Commission is
-        // charged on the fare, not on a bonus, and GST is charged on the
-        // commission rather than on the fare. The per-order fee is flat, which
-        // is what makes it bite hardest on small orders. The platform can never
-        // take more than the order paid.
-        val platformFee = (
-            gross * s.effectiveCommissionPercent / 100.0 + s.perOrderFee
-            ).coerceIn(0.0, gross)
+        // The fare on an offer card is what the customer pays, and a slice of
+        // it never reaches the driver: commission where a plan charges one,
+        // plus taxes and fees, which are taken on either plan. Charged on the
+        // fare, not on a bonus.
+        val platformFee = s.deductionOn(gross)
         val fuelCost = costedKm * s.fuelCostPerKm
         val maintenanceCost = if (s.maintenanceEnabled) costedKm * s.maintenancePerKm else 0.0
         val net = earned - platformFee - fuelCost - maintenanceCost

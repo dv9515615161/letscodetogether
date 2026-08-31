@@ -142,6 +142,20 @@ fun SettingsScreen(
                 onSelect = { plan -> onChange { it.copy(earningsPlan = plan) } },
             )
 
+            // Taxes and fees come off on either plan - that is the trap the
+            // earnings plan sets, since "0% commission" reads as "the fare is
+            // mine" when about a tenth of it is not.
+            NumberField(
+                "Taxes and other fees",
+                settings.taxesAndFeesPercent,
+                "% of the fare",
+                2,
+            ) { v -> onChange { it.copy(taxesAndFeesPercent = v) } }
+
+            NumberField("Fixed fee per order", settings.perOrderFee, "₹", 2) { v ->
+                onChange { it.copy(perOrderFee = v) }
+            }
+
             if (settings.earningsPlan == EarningsPlan.COMMISSION) {
                 NumberField("Commission", settings.commissionPercent, "% of the fare", 1) { v ->
                     onChange { it.copy(commissionPercent = v) }
@@ -166,9 +180,12 @@ fun SettingsScreen(
                 )
             }
 
-            NumberField("Handling fee per order", settings.perOrderFee, "₹", 2) { v ->
-                onChange { it.copy(perOrderFee = v) }
-            }
+            // Checkable against any completed order's payment breakdown.
+            LabelledValue(
+                "On a ₹70 fare",
+                "${Format.rupees2(settings.deductionOn(70.0))} kept, " +
+                    "${Format.rupees2(70.0 - settings.deductionOn(70.0))} yours",
+            )
         }
 
         SectionCard(

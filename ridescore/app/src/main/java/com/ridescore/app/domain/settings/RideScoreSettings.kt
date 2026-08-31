@@ -123,9 +123,20 @@ data class RideScoreSettings(
     val gstOnCommissionPercent: Double = DEFAULT_GST_ON_COMMISSION_PERCENT,
 
     /**
-     * A flat amount kept from every order, whatever its size - Rapido's
-     * handling fee. A percentage cannot express it: ₹5 is 13% of a ₹38 order
-     * and 3.5% of a ₹142 one, so it hurts small orders most.
+     * Taxes and fees taken from every order **on either plan**.
+     *
+     * Rapido's order details call this "Government Taxes and Other Fees", and
+     * it is deducted even when commission is 0% on the earnings plan - which
+     * is exactly the trap: a driver on that plan sees "0% commission" and
+     * assumes the fare is theirs, when about a tenth of it is not.
+     */
+    val taxesAndFeesPercent: Double = 0.0,
+
+    /**
+     * A flat amount kept from every order, whatever its size - the handling
+     * fee. Also charged on either plan. A percentage cannot express it: ₹2.82
+     * is 5.5% of a ₹51 order and 3.8% of a ₹74 one, so it hurts small orders
+     * most.
      */
     val perOrderFee: Double = 0.0,
 
@@ -235,6 +246,17 @@ data class RideScoreSettings(
             0.0
         }
 
+    /**
+     * Everything taken as a percentage of the fare: the commission where one
+     * applies, plus taxes and fees, which apply either way.
+     */
+    val totalDeductionPercent: Double
+        get() = effectiveCommissionPercent + taxesAndFeesPercent
+
+    /** What the platform keeps from a fare of this size, in rupees. */
+    fun deductionOn(fare: Double): Double =
+        (fare * totalDeductionPercent / 100.0 + perOrderFee).coerceIn(0.0, fare)
+
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double
         get() = if (mileageKmPerLitre > 0.0) petrolPricePerLitre / mileageKmPerLitre else 0.0
@@ -260,6 +282,7 @@ data class RideScoreSettings(
         overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),
         maintenancePerKm = maintenancePerKm.coerceIn(0.0, 100.0),
         commissionPercent = commissionPercent.coerceIn(0.0, 90.0),
+        taxesAndFeesPercent = taxesAndFeesPercent.coerceIn(0.0, 50.0),
         gstOnCommissionPercent = gstOnCommissionPercent.coerceIn(0.0, 100.0),
         perOrderFee = perOrderFee.coerceIn(0.0, 1_000.0),
         dailyPlanFee = dailyPlanFee.coerceIn(0.0, 10_000.0),
