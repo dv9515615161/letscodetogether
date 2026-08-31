@@ -77,6 +77,7 @@ class SettingsRepository(private val context: Context) {
             gstOnCommissionPercent = this[Keys.GST_ON_COMMISSION_PCT] ?: d.gstOnCommissionPercent,
             taxesAndFeesPercent = this[Keys.TAXES_PCT] ?: d.taxesAndFeesPercent,
             perOrderFee = this[Keys.PER_ORDER_FEE] ?: d.perOrderFee,
+            parcelOrdersExempt = this[Keys.PARCEL_EXEMPT] ?: d.parcelOrdersExempt,
             dailyPlanFee = this[Keys.DAILY_PLAN_FEE] ?: d.dailyPlanFee,
             overlayEnabled = this[Keys.OVERLAY_ON] ?: d.overlayEnabled,
             overlayMode = this[Keys.OVERLAY_MODE]?.let { runCatching { OverlayMode.valueOf(it) }.getOrNull() }
@@ -124,6 +125,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.GST_ON_COMMISSION_PCT] = s.gstOnCommissionPercent
         this[Keys.TAXES_PCT] = s.taxesAndFeesPercent
         this[Keys.PER_ORDER_FEE] = s.perOrderFee
+        this[Keys.PARCEL_EXEMPT] = s.parcelOrdersExempt
         this[Keys.DAILY_PLAN_FEE] = s.dailyPlanFee
         this[Keys.OVERLAY_ON] = s.overlayEnabled
         this[Keys.OVERLAY_MODE] = s.overlayMode.name
@@ -169,6 +171,7 @@ class SettingsRepository(private val context: Context) {
         val GST_ON_COMMISSION_PCT = doublePreferencesKey("gst_on_commission_percent")
         val TAXES_PCT = doublePreferencesKey("taxes_and_fees_percent")
         val PER_ORDER_FEE = doublePreferencesKey("per_order_fee")
+        val PARCEL_EXEMPT = booleanPreferencesKey("parcel_orders_exempt")
         val DAILY_PLAN_FEE = doublePreferencesKey("daily_plan_fee")
         val OVERLAY_ON = booleanPreferencesKey("overlay_enabled")
         val OVERLAY_MODE = stringPreferencesKey("overlay_mode")

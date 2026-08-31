@@ -150,19 +150,29 @@ this is set, so it asks rather than assuming.
 
 **0% commission does not mean the fare is yours.** Rapido's payout screens show
 a *Government Taxes and Other Fees* line that comes off on either plan, even
-when the commission is zero. Three real orders from one morning on the earnings
-plan:
+when the commission is zero. Six real orders from one day on the earnings plan:
 
 | Customer fare | Taxes and other fees | Reached the driver |
 |---|---|---|
-| ₹73 | −₹6.29 | ₹66.71 |
+| ₹43 | −₹4.86 | ₹38.14 |
 | ₹51 | −₹5.24 | ₹45.76 |
+| ₹56 | −₹5.48 | ₹50.52 |
+| ₹73 | −₹6.29 | ₹66.71 |
 | ₹74 | −₹6.33 | ₹67.67 |
+| ₹89 + ₹10 extra | −₹7.46 | ₹95.54 |
 
-Those fit **₹2.82 + 4.74% of the fare** to within a paisa — about a tenth of a
-small order, gone before any petrol is bought, which a driver reading "0%
-commission" would never guess. So the taxes percentage and the flat per-order
-fee apply on **both** plans, and only the commission is plan-dependent.
+Across a 2.3× range of fares those fit **₹2.87 + 4.65%** to within two paise,
+and the last one shows the fee tracks a customer extra as well as the fare.
+That is about a tenth of a small order, gone before any petrol is bought,
+which a driver reading "0% commission" would never guess. So the taxes
+percentage and the flat per-order fee apply on **both** plans, and only the
+commission is plan-dependent.
+
+**Parcel orders are the exception.** On the same payout screens a parcel
+order's fare and its earning are the same number — ₹57 paid ₹57, ₹130 paid
+₹130, nothing deducted. RideScore reads the ride type off the offer and skips
+the deduction for parcel and delivery work; the behaviour can be switched off
+if a platform starts charging on it.
 
 Read your own numbers off any completed order's payment breakdown rather than
 copying the ones above; they will differ by city and by category. The settings

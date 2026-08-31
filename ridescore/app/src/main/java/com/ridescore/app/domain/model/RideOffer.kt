@@ -31,6 +31,19 @@ data class RideOffer(
     /** The raw lines this offer was parsed from. Never leaves the device. */
     val rawLines: List<String> = emptyList(),
 ) {
+    /**
+     * A parcel or delivery job rather than a passenger ride.
+     *
+     * Worth telling apart because Rapido's payout screens deduct nothing at
+     * all from parcel orders - the fare is the earning - while a bike ride of
+     * the same value loses taxes and fees.
+     */
+    val looksLikeParcel: Boolean
+        get() {
+            val type = rideType?.lowercase() ?: return false
+            return PARCEL_WORDS.any { type.contains(it) }
+        }
+
     /** Fare is the one thing that can never be guessed. */
     val hasFare: Boolean get() = totalFare != null && totalFare > 0.0
 
@@ -40,6 +53,8 @@ data class RideOffer(
             (tripDistanceKm != null && tripDistanceKm > 0.0) &&
             (tripTimeMinutes != null && tripTimeMinutes > 0.0)
 }
+
+private val PARCEL_WORDS = listOf("parcel", "delivery", "package", "courier", "food")
 
 enum class OfferField {
     BASE_FARE,

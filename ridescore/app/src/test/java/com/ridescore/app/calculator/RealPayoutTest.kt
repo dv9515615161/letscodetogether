@@ -4,23 +4,31 @@ import com.ridescore.app.TestFixtures.offer
 import com.ridescore.app.domain.settings.EarningsPlan
 import com.ridescore.app.domain.settings.RideScoreSettings
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Checked against real Rapido payout screens from one morning in Kukatpally,
- * all of them on the earnings plan with **0% commission**.
+ * Checked against real Rapido payout screens from one day in Kukatpally, all
+ * on the earnings plan with **0% commission**.
  *
  * | Customer fare | Taxes and other fees | Reached the driver |
  * |---|---|---|
- * | ₹73 | −₹6.29 | ₹66.71 |
+ * | ₹43 | −₹4.86 | ₹38.14 |
  * | ₹51 | −₹5.24 | ₹45.76 |
+ * | ₹56 | −₹5.48 | ₹50.52 |
+ * | ₹73 | −₹6.29 | ₹66.71 |
  * | ₹74 | −₹6.33 | ₹67.67 |
+ * | ₹89 + ₹10 extra | −₹7.46 | ₹95.54 |
  *
- * Those three fit ₹2.82 + 4.74% of the fare to within a paisa. The point they
- * make is the one that matters: **0% commission does not mean the fare is
- * yours.** About a tenth of it is gone before any petrol is bought, and a
- * driver reading "0% commission" would never guess it.
+ * Six orders across a 2.3x range of fares fit **₹2.87 + 4.65%** to within two
+ * paise, and the last one shows the fee tracks the customer extra as well as
+ * the fare. The point they make is the one that matters: **0% commission does
+ * not mean the fare is yours.** About a tenth is gone before any petrol is
+ * bought, and a driver reading "0% commission" would never guess it.
+ *
+ * Parcel orders are the exception - ₹57 paid ₹57, ₹130 paid ₹130, nothing
+ * deducted at all.
  */
 class RealPayoutTest {
 
@@ -29,18 +37,45 @@ class RealPayoutTest {
     /** The earnings plan as it actually pays out, fitted from those orders. */
     private val earningsPlan = RideScoreSettings.DEFAULT.copy(
         earningsPlan = EarningsPlan.SUBSCRIPTION,
-        taxesAndFeesPercent = 4.74,
-        perOrderFee = 2.82,
+        taxesAndFeesPercent = 4.65,
+        perOrderFee = 2.87,
     )
 
     private fun payout(fare: Double) =
         calculator.analyse(offer(totalFare = fare), earningsPlan).let { it.grossEarning - it.platformFee }
 
     @Test
-    fun `reproduces three real payouts to within a paisa`() {
-        assertEquals(66.71, payout(73.0), 0.02)
-        assertEquals(45.76, payout(51.0), 0.02)
-        assertEquals(67.67, payout(74.0), 0.02)
+    fun `reproduces six real payouts to within three paise`() {
+        assertEquals(38.14, payout(43.0), 0.03)
+        assertEquals(45.76, payout(51.0), 0.03)
+        assertEquals(50.52, payout(56.0), 0.03)
+        assertEquals(66.71, payout(73.0), 0.03)
+        assertEquals(67.67, payout(74.0), 0.03)
+        // ₹89 fare plus a ₹10 customer extra: the fee tracks the total.
+        assertEquals(91.54, payout(99.0), 0.03)
+    }
+
+    @Test
+    fun `a parcel order keeps its whole fare`() {
+        val parcel = offer(totalFare = 130.0).copy(rideType = "Parcel Delivery")
+        val analysis = calculator.analyse(parcel, earningsPlan)
+
+        assertTrue(parcel.looksLikeParcel)
+        assertEquals(0.0, analysis.platformFee, 0.001)
+        assertEquals(130.0, analysis.grossEarning, 0.001)
+        assertTrue(analysis.notes.any { it.contains("Parcel order") })
+
+        // The same fare as a bike ride loses about a tenth.
+        val ride = calculator.analyse(offer(totalFare = 130.0), earningsPlan)
+        assertEquals(8.92, ride.platformFee, 0.02)
+    }
+
+    @Test
+    fun `a bike ride is not mistaken for a parcel`() {
+        assertFalse(offer(totalFare = 56.0).copy(rideType = "Bike").looksLikeParcel)
+        assertEquals(5.48, calculator.analyse(
+            offer(totalFare = 56.0).copy(rideType = "Bike"), earningsPlan,
+        ).platformFee, 0.02)
     }
 
     @Test
@@ -48,7 +83,7 @@ class RealPayoutTest {
         assertEquals(0.0, earningsPlan.effectiveCommissionPercent, 0.001)
 
         val kept = calculator.analyse(offer(totalFare = 51.0), earningsPlan).platformFee
-        assertEquals(5.24, kept, 0.02)
+        assertEquals(5.24, kept, 0.03)
         // 10.3% of a ₹51 order, with the commission at zero.
         assertTrue(kept / 51.0 > 0.10)
     }
@@ -71,11 +106,11 @@ class RealPayoutTest {
             commissionPercent = 16.0,
             gstOnCommissionPercent = 18.0,
         )
-        // 18.88% commission and GST, plus the 4.74% that is taken either way.
-        assertEquals(23.62, commission.totalDeductionPercent, 0.01)
+        // 18.88% commission and GST, plus the 4.65% that is taken either way.
+        assertEquals(23.53, commission.totalDeductionPercent, 0.01)
 
         val kept = calculator.analyse(offer(totalFare = 73.0), commission).platformFee
-        assertEquals(20.06, kept, 0.02) // vs ₹6.29 on the earnings plan
+        assertEquals(20.05, kept, 0.03) // vs ₹6.29 on the earnings plan
     }
 
     @Test

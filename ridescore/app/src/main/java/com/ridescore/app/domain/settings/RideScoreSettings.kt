@@ -141,6 +141,16 @@ data class RideScoreSettings(
     val perOrderFee: Double = 0.0,
 
     /**
+     * Whether parcel orders escape the taxes and fees.
+     *
+     * On the payout screens they do: a parcel order's fare and its earning are
+     * the same number, while a bike ride of the same size loses about a tenth.
+     * On by default so a driver who enters their ride deductions does not have
+     * them wrongly applied to parcel work.
+     */
+    val parcelOrdersExempt: Boolean = true,
+
+    /**
      * Earnings plan: what the plan costs per day.
      *
      * Deliberately *not* subtracted from individual offers. Once the day's fee
@@ -253,9 +263,16 @@ data class RideScoreSettings(
     val totalDeductionPercent: Double
         get() = effectiveCommissionPercent + taxesAndFeesPercent
 
-    /** What the platform keeps from a fare of this size, in rupees. */
-    fun deductionOn(fare: Double): Double =
-        (fare * totalDeductionPercent / 100.0 + perOrderFee).coerceIn(0.0, fare)
+    /**
+     * What the platform keeps from a fare of this size, in rupees.
+     *
+     * @param isParcel parcel and delivery jobs, which are deducted differently
+     *   - on Rapido, not at all.
+     */
+    fun deductionOn(fare: Double, isParcel: Boolean = false): Double {
+        if (isParcel && parcelOrdersExempt) return 0.0
+        return (fare * totalDeductionPercent / 100.0 + perOrderFee).coerceIn(0.0, fare)
+    }
 
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double

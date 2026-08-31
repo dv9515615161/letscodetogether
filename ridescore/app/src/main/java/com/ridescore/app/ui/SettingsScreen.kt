@@ -180,6 +180,13 @@ fun SettingsScreen(
                 )
             }
 
+            SwitchRow(
+                label = "Parcel orders are exempt",
+                checked = settings.parcelOrdersExempt,
+                description = "On Rapido's payout screens a parcel order's fare and its " +
+                    "earning are the same number - nothing is taken.",
+            ) { on -> onChange { it.copy(parcelOrdersExempt = on) } }
+
             // Checkable against any completed order's payment breakdown.
             LabelledValue(
                 "On a ₹70 fare",
