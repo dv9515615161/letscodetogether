@@ -117,8 +117,27 @@ data class RideScoreSettings(
     val commissionPercent: Double = DEFAULT_COMMISSION_PERCENT,
 
     /**
+     * Commission plan: how much of the fare carries no commission.
+     *
+     * On three order details from the commission plan the commission line is
+     * not 16% of the customer fare, despite saying so. It is 16% of the fare
+     * less Rs. 2.50, every time and to the paisa: Rs. 40 was charged Rs. 6.00
+     * where 16% is Rs. 6.40, Rs. 82 was charged Rs. 12.72 where 16% is
+     * Rs. 13.12, Rs. 60 was charged Rs. 9.20 where 16% is Rs. 9.60. A constant
+     * Rs. 0.40 short each time is 16% of Rs. 2.50 - some fixed part of the
+     * fare that commission is not charged on.
+     */
+    val commissionExemptAmount: Double = DEFAULT_COMMISSION_EXEMPT,
+
+    /**
      * Commission plan: GST charged on the commission itself, not on the fare.
-     * 16% commission with 18% GST on it takes 18.88% of the fare, not 34%.
+     *
+     * **Zero by default, because Rapido does not show it here.** The order
+     * details put GST inside "Government Taxes and Other Fees", which is the
+     * next field down - the commission line is the bare 16%, with no GST added
+     * to it. A driver who reads their taxes line off a payout screen has
+     * already captured the GST, so charging it again here would count it
+     * twice. Left configurable for a platform that does bill it separately.
      */
     val gstOnCommissionPercent: Double = DEFAULT_GST_ON_COMMISSION_PERCENT,
 
@@ -263,8 +282,24 @@ data class RideScoreSettings(
         }
 
     /**
+     * The commission on a fare of this size, in rupees.
+     *
+     * Charged on the fare above [commissionExemptAmount], not on all of it.
+     * The exempt part matters most where the driver can least afford it: on a
+     * Rs. 40 order it is a sixteenth of the commission, on a Rs. 200 order a
+     * three-hundredth.
+     */
+    fun commissionOn(fare: Double): Double =
+        ((fare - commissionExemptAmount).coerceAtLeast(0.0) *
+            effectiveCommissionPercent / 100.0)
+
+    /**
      * Everything taken as a percentage of the fare: the commission where one
      * applies, plus taxes and fees, which apply either way.
+     *
+     * An approximation for display only - it ignores both the flat fee and the
+     * commission-exempt amount, so it reads slightly high on small orders.
+     * [deductionOn] is what the money is actually computed with.
      */
     val totalDeductionPercent: Double
         get() = effectiveCommissionPercent + taxesAndFeesPercent
@@ -276,7 +311,7 @@ data class RideScoreSettings(
      *   fee. Commission, where the plan charges one, still applies.
      */
     fun deductionOn(fare: Double, isParcel: Boolean = false): Double {
-        val commission = fare * effectiveCommissionPercent / 100.0
+        val commission = commissionOn(fare)
         val taxesAndFees = if (isParcel && parcelOrdersExempt) {
             0.0
         } else {
@@ -314,6 +349,7 @@ data class RideScoreSettings(
         overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),
         maintenancePerKm = maintenancePerKm.coerceIn(0.0, 100.0),
         commissionPercent = commissionPercent.coerceIn(0.0, 90.0),
+        commissionExemptAmount = commissionExemptAmount.coerceIn(0.0, 1_000.0),
         taxesAndFeesPercent = taxesAndFeesPercent.coerceIn(0.0, 50.0),
         gstOnCommissionPercent = gstOnCommissionPercent.coerceIn(0.0, 100.0),
         perOrderFee = perOrderFee.coerceIn(0.0, 1_000.0),
@@ -330,7 +366,12 @@ data class RideScoreSettings(
         const val DEFAULT_PICKUP_SPEED = 17.0
         const val DEFAULT_MAINTENANCE_PER_KM = 1.5
         const val DEFAULT_COMMISSION_PERCENT = 16.0
-        const val DEFAULT_GST_ON_COMMISSION_PERCENT = 18.0
+
+        /** Rs. 2.50 of every fare carries no commission - fitted, see above. */
+        const val DEFAULT_COMMISSION_EXEMPT = 2.5
+
+        /** Zero: Rapido bills GST inside the taxes line, not on commission. */
+        const val DEFAULT_GST_ON_COMMISSION_PERCENT = 0.0
 
         val MILEAGE_PRESETS = listOf(35.0, 36.0, 37.0, 37.5, 38.0, 39.0, 40.0)
 

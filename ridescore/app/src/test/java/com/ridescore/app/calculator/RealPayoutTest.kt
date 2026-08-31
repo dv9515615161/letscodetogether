@@ -75,19 +75,22 @@ class RealPayoutTest {
 
     @Test
     fun `a parcel on the commission plan still pays commission, but no tax`() {
-        val commissionPlan = earningsPlan.copy(
+        val commissionPlan = RideScoreSettings.DEFAULT.copy(
             earningsPlan = EarningsPlan.COMMISSION,
             commissionPercent = 16.0,
-            gstOnCommissionPercent = 18.0,
+            commissionExemptAmount = 2.5,
+            gstOnCommissionPercent = 0.0,
+            taxesAndFeesPercent = 6.7381,
+            perOrderFee = 2.7648,
         )
         val parcel = offer(totalFare = 130.0).copy(rideType = "Parcel Delivery")
 
-        // 18.88% of 130 = 24.54 - the commission and its GST, and nothing else.
-        assertEquals(24.54, calculator.analyse(parcel, commissionPlan).platformFee, 0.02)
+        // 16% of (130 - 2.5) = 20.40 - the commission alone, and nothing else.
+        assertEquals(20.40, calculator.analyse(parcel, commissionPlan).platformFee, 0.02)
 
-        // A bike ride of the same fare pays that plus 4.65% + Rs.2.87 = 8.92.
+        // A bike ride of the same fare pays that plus 6.74% + Rs.2.76 = 11.52.
         val ride = calculator.analyse(offer(totalFare = 130.0), commissionPlan)
-        assertEquals(24.54 + 8.92, ride.platformFee, 0.03)
+        assertEquals(20.40 + 11.52, ride.platformFee, 0.03)
     }
 
     @Test
@@ -120,17 +123,26 @@ class RealPayoutTest {
     }
 
     @Test
-    fun `the commission plan stacks on top of the same taxes`() {
-        val commission = earningsPlan.copy(
+    fun `the same fare is worth far less on the commission plan`() {
+        // Both sides measured, not assumed: the earnings-plan figures above,
+        // and the commission-plan ones from CommissionPlanPayoutTest.
+        val commission = RideScoreSettings.DEFAULT.copy(
             earningsPlan = EarningsPlan.COMMISSION,
             commissionPercent = 16.0,
-            gstOnCommissionPercent = 18.0,
+            commissionExemptAmount = 2.5,
+            gstOnCommissionPercent = 0.0,
+            taxesAndFeesPercent = 6.7381,
+            perOrderFee = 2.7648,
         )
-        // 18.88% commission and GST, plus the 4.65% that is taken either way.
-        assertEquals(23.53, commission.totalDeductionPercent, 0.01)
 
-        val kept = calculator.analyse(offer(totalFare = 73.0), commission).platformFee
-        assertEquals(20.05, kept, 0.03) // vs ₹6.29 on the earnings plan
+        val onEarnings = calculator.analyse(offer(totalFare = 73.0), earningsPlan).platformFee
+        val onCommission = calculator.analyse(offer(totalFare = 73.0), commission).platformFee
+
+        assertEquals(6.29, onEarnings, 0.03)
+        assertEquals(18.96, onCommission, 0.05)
+        // A ₹73 ride hands over about ₹12.70 more on the commission plan, which
+        // is what the daily plan fee is buying.
+        assertTrue(onCommission - onEarnings > 12.0)
     }
 
     @Test

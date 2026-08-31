@@ -119,6 +119,7 @@ class FareCalculatorTest {
             settings.copy(
                 earningsPlan = com.ridescore.app.domain.settings.EarningsPlan.COMMISSION,
                 commissionPercent = 10.0,
+                commissionExemptAmount = 0.0,
                 gstOnCommissionPercent = 0.0,
             ),
         )

@@ -74,6 +74,8 @@ class SettingsRepository(private val context: Context) {
             earningsPlan = this[Keys.EARNINGS_PLAN]
                 ?.let { runCatching { EarningsPlan.valueOf(it) }.getOrNull() } ?: d.earningsPlan,
             commissionPercent = this[Keys.COMMISSION_PCT] ?: d.commissionPercent,
+            commissionExemptAmount =
+                this[Keys.COMMISSION_EXEMPT] ?: d.commissionExemptAmount,
             gstOnCommissionPercent = this[Keys.GST_ON_COMMISSION_PCT] ?: d.gstOnCommissionPercent,
             taxesAndFeesPercent = this[Keys.TAXES_PCT] ?: d.taxesAndFeesPercent,
             perOrderFee = this[Keys.PER_ORDER_FEE] ?: d.perOrderFee,
@@ -122,6 +124,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.MAINTENANCE_PER_KM] = s.maintenancePerKm
         this[Keys.EARNINGS_PLAN] = s.earningsPlan.name
         this[Keys.COMMISSION_PCT] = s.commissionPercent
+        this[Keys.COMMISSION_EXEMPT] = s.commissionExemptAmount
         this[Keys.GST_ON_COMMISSION_PCT] = s.gstOnCommissionPercent
         this[Keys.TAXES_PCT] = s.taxesAndFeesPercent
         this[Keys.PER_ORDER_FEE] = s.perOrderFee
@@ -171,6 +174,7 @@ class SettingsRepository(private val context: Context) {
         val GST_ON_COMMISSION_PCT = doublePreferencesKey("gst_on_commission_percent")
         val TAXES_PCT = doublePreferencesKey("taxes_and_fees_percent")
         val PER_ORDER_FEE = doublePreferencesKey("per_order_fee")
+        val COMMISSION_EXEMPT = doublePreferencesKey("commission_exempt_amount")
         val PARCEL_EXEMPT = booleanPreferencesKey("parcel_orders_exempt")
         val DAILY_PLAN_FEE = doublePreferencesKey("daily_plan_fee")
         val OVERLAY_ON = booleanPreferencesKey("overlay_enabled")

@@ -137,11 +137,10 @@ front of the offer. That would cover the screen the driver is trying to read.
 On Rapido that matters, because captains choose between two plans and they are
 completely different arithmetic:
 
-- **Commission plan** — Rapido keeps a percentage of every fare, and GST is
-  charged on that commission. 16% commission with 18% GST on it is **18.88% of
-  the fare**, not 34%: the GST applies to the commission, not to the fare.
-- **Earnings plan** — a fixed fee per day, and then the fare is the driver's.
-  Rapido's rate card shows 0% commission on this one.
+- **Commission plan** — Rapido keeps a percentage of every fare, plus the taxes
+  line below.
+- **Earnings plan** — a fixed fee per day, and then the fare is the driver's,
+  less the same taxes line. Rapido's rate card shows 0% commission on this one.
 
 Set it in the first-run setup or under **Settings ▸ Your plan**; the rate card
 inside Rapido shows which you are on, under *Rapido's Commission*. On the
@@ -167,6 +166,31 @@ That is about a tenth of a small order, gone before any petrol is bought,
 which a driver reading "0% commission" would never guess. So the taxes
 percentage and the flat per-order fee apply on **both** plans, and only the
 commission is plan-dependent.
+
+**The commission is not charged on the whole fare, though the screen says it
+is.** Three order details from the commission plan, same driver, same city:
+
+| Customer fare | Taxes and other fees | Commission | Total earning |
+|---|---|---|---|
+| ₹40 | −₹5.46 | −₹6.00 | ₹28.54 |
+| ₹82 | −₹8.29 | −₹12.72 | ₹60.99 |
+| ₹60 | −₹6.81 | −₹9.20 | ₹43.99 |
+
+Every commission line is headed *"16.00% of Customer Fare"*, and not one of
+them is. 16% of ₹40 is ₹6.40; the charge was ₹6.00. Of ₹82, ₹13.12; charged
+₹12.72. Of ₹60, ₹9.60; charged ₹9.20. Short by **₹0.40 every time**, on fares
+twice apart in size — and ₹0.40 is 16% of ₹2.50. Some fixed ₹2.50 of each fare
+carries no commission, so the charge is 16% of the rest. Settings calls it
+*fare that carries no commission*; set it to 0 if your own payout screens show
+the flat percentage.
+
+**And that commission line carries no GST.** It is the bare 16%. Rapido bills
+the GST inside *Government Taxes and Other Fees* — which is why that line is
+6.74% + ₹2.76 on the commission plan against 4.65% + ₹2.87 on the earnings
+plan. So the *GST on that commission* field defaults to **0**: a driver who
+copies their taxes line off a payout screen has already paid it once, and
+entering it again would charge it twice. RideScore used to do exactly that,
+and overstated the platform's cut by ₹1.55 to ₹2.76 an order.
 
 **Parcel orders pay no tax.** On the same payout screens a parcel order's fare
 and its earning are the same number — ₹57 paid ₹57, ₹130 paid ₹130. RideScore

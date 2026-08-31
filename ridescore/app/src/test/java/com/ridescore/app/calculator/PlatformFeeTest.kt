@@ -15,10 +15,19 @@ class PlatformFeeTest {
 
     private val calculator = FareCalculator()
 
-    /** Rapido's commission plan: 16% of the fare, 18% GST on that, ₹5 an order. */
+    /**
+     * A made-up commission plan: 16% of the fare, 18% GST on that, ₹5 an
+     * order. Round numbers chosen to make the arithmetic below checkable by
+     * hand - what Rapido actually bills is in [CommissionPlanPayoutTest],
+     * measured off real order details.
+     *
+     * The commission-exempt amount is zeroed so these cases test the one thing
+     * they are about: how GST composes with a commission.
+     */
     private val withFees = RideScoreSettings.DEFAULT.copy(
         earningsPlan = EarningsPlan.COMMISSION,
         commissionPercent = 16.0,
+        commissionExemptAmount = 0.0,
         gstOnCommissionPercent = 18.0,
         perOrderFee = 5.0,
     )

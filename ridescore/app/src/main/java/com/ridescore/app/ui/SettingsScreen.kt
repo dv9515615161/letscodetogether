@@ -160,12 +160,25 @@ fun SettingsScreen(
                 NumberField("Commission", settings.commissionPercent, "% of the fare", 1) { v ->
                     onChange { it.copy(commissionPercent = v) }
                 }
+                NumberField(
+                    "Fare that carries no commission",
+                    settings.commissionExemptAmount,
+                    "₹",
+                    2,
+                ) { v -> onChange { it.copy(commissionExemptAmount = v) } }
                 NumberField("GST on that commission", settings.gstOnCommissionPercent, "%", 1) { v ->
                     onChange { it.copy(gstOnCommissionPercent = v) }
                 }
+                Text(
+                    "Leave GST at 0 if your taxes line above already came off a payout " +
+                        "screen - Rapido bills the GST inside that line, so entering it " +
+                        "here as well counts it twice.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 LabelledValue(
-                    "Rapido keeps",
-                    "${Format.decimal(settings.effectiveCommissionPercent, 2)}% of each fare",
+                    "Commission on a ₹70 fare",
+                    Format.rupees2(settings.commissionOn(70.0)),
                 )
             } else {
                 NumberField("Plan cost", settings.dailyPlanFee, "₹ per day", 0) { v ->
