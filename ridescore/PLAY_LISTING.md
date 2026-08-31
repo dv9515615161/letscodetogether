@@ -62,6 +62,8 @@ THINGS THAT COST YOU MONEY QUIETLY
 
 YOUR DATA STAYS ON YOUR PHONE
 
+Free, with no ads and no in-app purchases.
+
 RideScore has no internet permission. It cannot send your data anywhere, even
 by accident. No account, no servers, no analytics, no location, no screenshots
 saved. Everything is calculated on the device.
@@ -123,15 +125,28 @@ service.
 | Is data encrypted in transit? | Not applicable — no data is transmitted. |
 | Can users request data deletion? | Yes — Settings → Ride log → Delete log, and uninstalling removes everything. |
 | Is all collected data optional? | Yes. |
+| Ads | None. |
+| In-app purchases | None. |
 
 ## Content rating
 
 Everyone. No user-generated content, no ads, no data sharing.
 
-## Assets still needed
+## Pricing
 
-- App icon, 512×512 PNG
-- Feature graphic, 1024×500
+Free. No ads, no in-app purchases, no subscription. Set "Free" in Play Console
+— note that an app published as free **cannot later be switched to paid**,
+though adding in-app purchases to a free app is always possible.
+
+## Assets
+
+Ready in [`store/`](store/), regenerate with `store/render.sh`:
+
+- `store/icon-512.png` — app icon, 512×512
+- `store/feature-graphic-1024x500.png` — feature graphic, 1024×500
+
+Still needed:
+
 - At least two phone screenshots — include the disclosure screen and the card
   over a real offer
 - A short screen recording for the reviewer showing the card appearing and the

@@ -127,6 +127,16 @@ data class RideScoreSettings(
      */
     val disclosureAccepted: Boolean = false,
 
+    /**
+     * Whether the driver has confirmed their own bike and petrol price.
+     *
+     * The defaults are a Pulsar 150 at 37.5 km/L. On another bike - an Activa
+     * does over 50 - every rupee figure in the app is wrong until this is set,
+     * and wrong quietly, which is the worst way to be wrong. So the app asks
+     * once, before it is used.
+     */
+    val setupCompleted: Boolean = false,
+
     // ---- Confidence -----------------------------------------------------
     /** Below this, a result is never shown as ACCEPT. */
     val lowConfidenceThreshold: Float = 0.75f,

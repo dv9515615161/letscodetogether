@@ -1,6 +1,6 @@
 # Releasing RideScore on Google Play
 
-Everything here is about getting from a sideloaded APK to an app anyone can
+Everything here is about getting from a sideloaded APK to a free app anyone can
 install from the Play Store without a Play Protect warning. **Publishing on
 Play is the only way to make the warning go away** — it is triggered by
 sideloading an app that declares an accessibility service, and no code change
@@ -106,26 +106,17 @@ the card appearing over a real offer, makes review go faster.
   log is on, and describe it as stored on-device and never transmitted.
 - Listing text is in [`PLAY_LISTING.md`](PLAY_LISTING.md).
 
-## 6. Subscriptions
+## 6. Money
 
-Digital subscriptions inside a Play app **must** use Google Play Billing. You
-cannot take UPI or a bank transfer for in-app features. Google's cut is 15% on
-the first US$1M of annual revenue, 30% above that.
+RideScore ships **free, with no ads and no in-app purchases**. That is a
+product decision, and it also removes a pile of work: no Play Billing, no
+merchant account, no subscription products to configure, no purchase
+verification, and a much simpler data safety form and review.
 
-Steps, once the account exists:
-
-1. Play Console → **Monetise → Subscriptions** → create a subscription with a
-   base plan (for example `ridescore_pro_monthly`) and, if you want one, an
-   introductory free trial.
-2. Add the Play Billing library and wire the purchase flow and entitlement
-   checks into the app.
-3. Verify purchases. Client-side checks alone can be tampered with on a rooted
-   device; a small server that validates against the Play Developer API is the
-   robust option, and can come later.
-
-**None of this can be built and tested without the Console**, because the
-product IDs and the licence tester accounts live there. Get the account first;
-the app code is a day's work after that.
+If that ever changes, the constraint to know is that digital subscriptions
+inside a Play app **must** use Google Play Billing — you cannot take UPI or a
+bank transfer for in-app features — and Google takes 15% of the first US$1M a
+year. Nothing about the current code forecloses adding it later.
 
 ---
 
@@ -150,6 +141,11 @@ warning, and when they do, the app stops reading fares for every paying user at
 once. A subscription business needs a way to notice that fast and ship a fix in
 days — the "Last screen read" diagnostic exists for exactly this, but you will
 want a support channel and a quick release process behind it.
+
+**A free app still costs you.** No revenue does not mean no obligations: a
+listed app needs updates when Play raises the target SDK each year, replies to
+reviews, and a fix when a parser breaks. Free removes the billing work, not the
+maintenance.
 
 **Support load is real.** Battery-optimisation killing the service, OEM quirks
 on Xiaomi and Vivo, accessibility being switched off by system updates — these

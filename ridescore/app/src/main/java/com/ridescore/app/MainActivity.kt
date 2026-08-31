@@ -43,6 +43,7 @@ import com.ridescore.app.ui.PermissionState
 import com.ridescore.app.ui.SampleOffers
 import com.ridescore.app.ui.SettingsScreen
 import com.ridescore.app.ui.SettingsViewModel
+import com.ridescore.app.ui.SetupScreen
 import com.ridescore.app.ui.theme.RideScoreTheme
 import com.ridescore.app.util.Diagnostics
 import kotlinx.coroutines.launch
@@ -102,6 +103,15 @@ class MainActivity : ComponentActivity() {
                     DisclosureScreen(
                         onAccept = { viewModel.update { it.copy(disclosureAccepted = true) } },
                         onOpenPrivacyPolicy = { openPrivacyPolicy() },
+                    )
+                    return@RideScoreTheme
+                }
+
+                if (!settings.setupCompleted) {
+                    SetupScreen(
+                        settings = settings,
+                        onChange = { transform -> viewModel.update(transform) },
+                        onDone = { viewModel.update { it.copy(setupCompleted = true) } },
                     )
                     return@RideScoreTheme
                 }
