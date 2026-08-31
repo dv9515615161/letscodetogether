@@ -105,6 +105,15 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            SwitchRow(
+                label = "Learn road speed from the apps",
+                checked = settings.learnRoadSpeed,
+                description = "When an offer does show its trip time, that is Rapido's " +
+                    "own live traffic estimate for the road you are on. RideScore " +
+                    "reads it off the screen and uses it for the offers that show no " +
+                    "time, so the speed above is only a starting point. Nothing is " +
+                    "sent anywhere - it learns from what is already on your screen.",
+            ) { on -> onChange { it.copy(learnRoadSpeed = on) } }
             NumberField(
                 "Speed in heavy traffic",
                 settings.slowTrafficFactor * 100.0,

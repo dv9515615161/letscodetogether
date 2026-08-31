@@ -19,6 +19,13 @@ open class RideScoreEngine(
     private val registry: ParserRegistry = ParserRegistry(),
     private val calculator: FareCalculator = FareCalculator(),
     private val clock: () -> Long = { System.currentTimeMillis() },
+    /**
+     * Called with (tripKm, tripMinutes, atMillis) for every offer that printed
+     * both. The default does nothing, so the engine stays usable on its own.
+     */
+    private val speedObserver: (Double, Double, Long) -> Unit = { _, _, _ -> },
+    /** The learned anchor speed for right now, or null if nothing is known. */
+    private val liveAnchorSpeed: (Long) -> Double? = { null },
 ) {
 
     open fun analyse(snapshot: ScreenSnapshot, settings: RideScoreSettings): ScreenAnalysis {
@@ -45,7 +52,27 @@ open class RideScoreEngine(
             ?: return ScreenAnalysis.empty(snapshot.sourceApp)
 
         val offers = parser.parse(snapshot)
-        val analyses = offers.map { calculator.analyse(it, settings) }
+
+        // Every offer that printed its own duration is a free reading of how
+        // fast the road is right now - the platform's own routing engine has
+        // already asked. Learn from those before scoring anything, so a screen
+        // showing one timed offer and one untimed one uses the timed one.
+        if (settings.learnRoadSpeed) {
+            offers.forEach { offer ->
+                val km = offer.tripDistanceKm
+                val minutes = offer.tripTimeMinutes
+                if (km != null && minutes != null) {
+                    speedObserver(km, minutes, snapshot.capturedAtMillis)
+                }
+            }
+        }
+        val resolved = if (settings.learnRoadSpeed) {
+            settings.copy(liveTripSpeedKmph = liveAnchorSpeed(snapshot.capturedAtMillis))
+        } else {
+            settings
+        }
+
+        val analyses = offers.map { calculator.analyse(it, resolved) }
         val finished = clock()
 
         return ScreenAnalysis(
@@ -57,6 +84,14 @@ open class RideScoreEngine(
             textSource = snapshot.textSource,
         )
     }
+
+    /**
+     * The resolved road speed, rounded, so a cache key can tell an empty road
+     * from a jammed one. Zero when nothing has been learned.
+     */
+    open fun roadSpeedKey(atMillis: Long, settings: RideScoreSettings): Int =
+        if (!settings.learnRoadSpeed) 0
+        else (liveAnchorSpeed(atMillis) ?: 0.0).toInt()
 
     /**
      * True when accessibility text alone was not enough and an OCR pass is

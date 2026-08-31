@@ -242,6 +242,54 @@ depended on the road being empty.
 Both parts are adjustable under **Settings ▸ Riding speeds**, and the stress
 test can be switched off if you would rather see the optimistic answer.
 
+### Live traffic, without a traffic API
+
+The speeds above are only a starting point, because the app does not have to
+guess for long. **When Rapido prints "5.96 km · 13.97 min" it has already asked
+its own routing engine what that road costs at this moment.** That is a live,
+traffic-aware estimate for the exact street the driver is on — and RideScore is
+already reading that screen.
+
+So it learns from them. Every offer that prints both a distance and a duration
+becomes one reading of how fast the roads are. Asked for a speed, the app
+answers in this order:
+
+1. **The road right now** — the median of readings from the last 45 minutes,
+   once there are at least three. Replaying a real log, 68% of the offers that
+   needed an estimate had three or more.
+2. **This hour of the day** — learned over previous days. In that log 05:00
+   averaged 27.3 km/h and 09:00 averaged 17.7, so the hour matters even when
+   the last half hour was quiet. Early morning really is faster.
+3. **The shipped default** — only until something has been learned.
+
+A reading is three numbers: a speed, an hour, a timestamp. No coordinates, no
+addresses, no fares, no ride identifiers. It is kept in a small text file in
+the app's own storage and **is never uploaded**. Readings outside 3–70 km/h are
+discarded, so a misparse cannot teach the app that the roads are empty.
+
+**Why not the Google Maps traffic API?** It was considered and rejected on
+four counts, any one of which is disqualifying:
+
+- **Privacy.** Asking Google how long a trip takes means sending Google the
+  pickup and drop of every offer. RideScore promises that ride and location
+  data never leave the phone, and that promise is worth more than a slightly
+  better estimate.
+- **Cost.** A traffic-aware route request is billed per call. One driver in
+  this log saw ~470 offers a day; at that rate a free app would be running a
+  five-figure monthly request bill in rupees, per driver.
+- **Latency.** An offer card lives for seconds. A network round trip on mobile
+  data is not something to put on that path.
+- **Key safety.** An API key shipped inside a free APK is extracted and abused,
+  and the bill lands on whoever published it.
+
+The platforms' own printed times cost nothing, arrive instantly, describe the
+same road at the same moment, and never leave the device. Where they exist they
+are simply better. Where they do not, the hour-of-day profile and the traffic
+stress test cover the gap.
+
+Turn it off with **Settings ▸ Learn road speed from the apps** if you would
+rather the app used only the fixed number you set.
+
 ### Screens RideScore stays off
 
 A plan page, the subscription page, a rate card and a finished order's receipt

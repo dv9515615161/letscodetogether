@@ -90,6 +90,16 @@ data class RideScoreSettings(
      */
     val slowTrafficFactor: Double = DEFAULT_SLOW_TRAFFIC_FACTOR,
     /**
+     * The anchor speed measured from the road right now, when one is known.
+     *
+     * Not a stored preference - it is filled in for each analysis from what
+     * the apps themselves have been printing, and overrides [tripSpeedKmph]
+     * when present. See `domain/speed/SpeedProfile`.
+     */
+    val liveTripSpeedKmph: Double? = null,
+    /** Whether to learn road speed from offers that print their own duration. */
+    val learnRoadSpeed: Boolean = true,
+    /**
      * Whether ACCEPT must survive the slow-traffic case.
      *
      * When an offer prints no duration RideScore estimates one, and an
@@ -381,11 +391,18 @@ data class RideScoreSettings(
      * The bands scale off [tripSpeedKmph] so the driver still has one number
      * to turn if their city is faster or slower than this one.
      */
-    fun tripSpeedFor(tripKm: Double): Double = tripSpeedKmph * when {
+    fun tripSpeedFor(tripKm: Double): Double = anchorTripSpeed * when {
         tripKm < SHORT_TRIP_KM -> SHORT_TRIP_FACTOR
         tripKm < MEDIUM_TRIP_KM -> MEDIUM_TRIP_FACTOR
         else -> LONG_TRIP_FACTOR
     }
+
+    /**
+     * The speed all the bands scale from: what the road is doing now if that
+     * has been measured, otherwise the driver's configured typical speed.
+     */
+    val anchorTripSpeed: Double
+        get() = liveTripSpeedKmph?.takeIf { learnRoadSpeed && it > 0.0 } ?: tripSpeedKmph
 
     /** The same trip when the roads are full. */
     fun slowTripSpeedFor(tripKm: Double): Double =

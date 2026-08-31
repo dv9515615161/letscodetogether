@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.ridescore.app.data.log.OfferLogger
 import com.ridescore.app.data.settings.SettingsCache
 import com.ridescore.app.data.settings.SettingsRepository
+import com.ridescore.app.data.speed.SpeedProfileStore
 import com.ridescore.app.domain.model.ScreenAnalysis
 import com.ridescore.app.domain.model.SourceApp
 import com.ridescore.app.engine.OfferPipeline
@@ -50,6 +51,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var speedProfile: SpeedProfileStore
     private lateinit var pipeline: OfferPipeline
     private var overlay: OverlayController? = null
     private var notifier: DecisionNotifier? = null
@@ -88,7 +90,15 @@ class RideScoreAccessibilityService : AccessibilityService() {
         instance = this
 
         settingsRepository = SettingsRepository(applicationContext)
-        val engine = RideScoreEngine()
+        speedProfile = SpeedProfileStore(applicationContext)
+        val engine = RideScoreEngine(
+            // Every offer that prints its own duration teaches the app what
+            // the road is doing right now, free and without a network call.
+            speedObserver = { km, minutes, at ->
+                speedProfile.observe(km, minutes, at, SettingsCache.current)
+            },
+            liveAnchorSpeed = { at -> speedProfile.liveAnchorSpeed(at, SettingsCache.current) },
+        )
         pipeline = OfferPipeline(
             engine = engine,
             settingsProvider = { SettingsCache.current },
@@ -325,6 +335,8 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private fun teardown() {
         if (instance === this) instance = null
         mainHandler.removeCallbacksAndMessages(null)
+        // Write out what this shift taught the app before the service goes.
+        if (::speedProfile.isInitialized) runCatching { speedProfile.flush() }
         pipeline.stop()
         overlay?.destroy()
         overlay = null

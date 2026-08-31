@@ -163,6 +163,14 @@ class OfferPipeline(
         return c > n
     }
 
-    private fun cacheKey(snapshot: ScreenSnapshot, settings: RideScoreSettings): String =
-        snapshot.signature + "@" + settings.hashCode().toString(16)
+    /**
+     * Two identical screens can still deserve different answers: the road
+     * speed the engine resolves is not part of [settings], so it goes in the
+     * key rounded to the nearest km/h. Without it a cached MAYBE from an empty
+     * road would be served back during the jam.
+     */
+    private fun cacheKey(snapshot: ScreenSnapshot, settings: RideScoreSettings): String {
+        val road = engine.roadSpeedKey(snapshot.capturedAtMillis, settings)
+        return snapshot.signature + "@" + settings.hashCode().toString(16) + "#" + road
+    }
 }
