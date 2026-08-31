@@ -124,23 +124,32 @@ object OverlayPresenter {
 
     /**
      * A tilde marks a total that contains an estimate. Uber prints the minutes
-     * to the pickup, so its totals are exact; Rapido does not, so RideScore
-     * works those out from the pickup speed, and the driver should be able to
-     * tell the two apart at a glance.
+     * to the pickup, so its totals are exact; Rapido often prints neither the
+     * pickup minutes nor the trip's, so RideScore works those out from the
+     * distances, and the driver should be able to tell the two apart at a
+     * glance.
      */
     private fun journeyLine(a: RideAnalysis): String {
-        val estimated = if (a.pickupTimeEstimated && a.pickupTimeMinutesCounted > 0.0) "~" else ""
+        val estimated = if (hasEstimate(a)) "~" else ""
         return "${Format.decimal(a.totalDistanceKm)} km • $estimated${Format.minutes(a.totalTimeMinutes)}"
     }
 
-    /** "4 min to pickup + 10 min trip", when both halves are known. */
+    /**
+     * "4 min to pickup + 10 min trip". Each half is tilde-marked on its own,
+     * so "~4 min to pickup + ~26 min trip" says plainly that neither number
+     * came off the screen.
+     */
     private fun legsLine(a: RideAnalysis): String? {
         val pickup = a.pickupTimeMinutesCounted
-        val trip = a.offer.tripTimeMinutes ?: return null
-        if (pickup <= 0.0) return null
-        val mark = if (a.pickupTimeEstimated) "~" else ""
-        return "$mark${pickup.toInt()} min to pickup + ${trip.toInt()} min trip"
+        val trip = a.tripTimeMinutesCounted
+        if (pickup <= 0.0 || trip <= 0.0) return null
+        val pickupMark = if (a.pickupTimeEstimated) "~" else ""
+        val tripMark = if (a.tripTimeEstimated) "~" else ""
+        return "$pickupMark${pickup.toInt()} min to pickup + $tripMark${trip.toInt()} min trip"
     }
+
+    private fun hasEstimate(a: RideAnalysis): Boolean =
+        (a.pickupTimeEstimated && a.pickupTimeMinutesCounted > 0.0) || a.tripTimeEstimated
 
     private fun checkReason(a: RideAnalysis): String {
         val missing = buildList {

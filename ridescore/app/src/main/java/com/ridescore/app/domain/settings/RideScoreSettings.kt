@@ -68,6 +68,17 @@ data class RideScoreSettings(
 
     // ---- Journey assumptions -------------------------------------------
     val pickupSpeedKmph: Double = DEFAULT_PICKUP_SPEED,
+
+    /**
+     * Riding speed on the paid leg, used only when the offer does not print
+     * the trip minutes.
+     *
+     * Faster than the pickup speed on purpose: riding to a pickup means
+     * hunting for a gate and a customer, while the trip itself is a straight
+     * run. Measured from 172 distinct real offers in a ride log that stated
+     * both the distance and the minutes - median 24 km/h, quartiles 19 and 33.
+     */
+    val tripSpeedKmph: Double = DEFAULT_TRIP_SPEED,
     val includePickupDistance: Boolean = true,
     val includePickupTime: Boolean = true,
 
@@ -341,6 +352,7 @@ data class RideScoreSettings(
         maybeNetPerHour = maybeNetPerHour.coerceIn(0.0, acceptNetPerHour),
         minNetPerKm = minNetPerKm.coerceIn(0.0, 1_000.0),
         pickupSpeedKmph = pickupSpeedKmph.coerceIn(3.0, 80.0),
+        tripSpeedKmph = tripSpeedKmph.coerceIn(3.0, 100.0),
         incentiveBonus = incentiveBonus.coerceIn(0.0, 100_000.0),
         incentiveTripsTarget = incentiveTripsTarget.coerceIn(0, 200),
         incentiveTripsDone = incentiveTripsDone.coerceIn(0, 200),
@@ -364,6 +376,9 @@ data class RideScoreSettings(
         const val DEFAULT_MAYBE_NET_PER_HOUR = 120.0
         const val DEFAULT_MIN_NET_PER_KM = 9.0
         const val DEFAULT_PICKUP_SPEED = 17.0
+
+        /** Median of 172 real offers that stated both km and minutes. */
+        const val DEFAULT_TRIP_SPEED = 24.0
         const val DEFAULT_MAINTENANCE_PER_KM = 1.5
         const val DEFAULT_COMMISSION_PERCENT = 16.0
 

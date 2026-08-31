@@ -60,6 +60,7 @@ class SettingsRepository(private val context: Context) {
             minNetPerKm = this[Keys.MIN_PER_KM] ?: d.minNetPerKm,
             requireBothMetrics = this[Keys.REQUIRE_BOTH] ?: d.requireBothMetrics,
             pickupSpeedKmph = this[Keys.PICKUP_SPEED] ?: d.pickupSpeedKmph,
+            tripSpeedKmph = this[Keys.TRIP_SPEED] ?: d.tripSpeedKmph,
             includePickupDistance = this[Keys.INCLUDE_PICKUP_KM] ?: d.includePickupDistance,
             includePickupTime = this[Keys.INCLUDE_PICKUP_MIN] ?: d.includePickupTime,
             incentiveEnabled = this[Keys.INCENTIVE_ON] ?: d.incentiveEnabled,
@@ -111,6 +112,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.MIN_PER_KM] = s.minNetPerKm
         this[Keys.REQUIRE_BOTH] = s.requireBothMetrics
         this[Keys.PICKUP_SPEED] = s.pickupSpeedKmph
+        this[Keys.TRIP_SPEED] = s.tripSpeedKmph
         this[Keys.INCLUDE_PICKUP_KM] = s.includePickupDistance
         this[Keys.INCLUDE_PICKUP_MIN] = s.includePickupTime
         this[Keys.INCENTIVE_ON] = s.incentiveEnabled
@@ -157,6 +159,7 @@ class SettingsRepository(private val context: Context) {
         val MIN_PER_KM = doublePreferencesKey("min_net_per_km")
         val REQUIRE_BOTH = booleanPreferencesKey("require_both_metrics")
         val PICKUP_SPEED = doublePreferencesKey("pickup_speed_kmph")
+        val TRIP_SPEED = doublePreferencesKey("trip_speed_kmph")
         val INCLUDE_PICKUP_KM = booleanPreferencesKey("include_pickup_distance")
         val INCLUDE_PICKUP_MIN = booleanPreferencesKey("include_pickup_time")
         val INCENTIVE_ON = booleanPreferencesKey("incentive_enabled")

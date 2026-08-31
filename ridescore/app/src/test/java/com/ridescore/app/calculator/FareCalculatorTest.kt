@@ -146,7 +146,18 @@ class FareCalculatorTest {
         val noFare = calculator.analyse(offer(totalFare = null), settings)
         assertEquals(Decision.CHECK, noFare.decision)
 
+        // No distance either, so there is nothing to estimate a time from.
+        val nothing = calculator.analyse(
+            offer(tripMin = null, tripKm = null, pickupKm = null),
+            settings,
+        )
+        assertEquals(Decision.CHECK, nothing.decision)
+
+        // A missing time with a distance IS estimated - but never silently.
+        // Counting it as zero minutes is what produced ₹4,000-an-hour rides.
         val noTime = calculator.analyse(offer(tripMin = null, pickupKm = null), settings)
-        assertEquals(Decision.CHECK, noTime.decision)
+        assertTrue(noTime.tripTimeEstimated)
+        assertTrue(noTime.totalTimeMinutes > 0.0)
+        assertTrue(noTime.notes.any { it.contains("Trip time estimated") })
     }
 }

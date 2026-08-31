@@ -85,12 +85,16 @@ fun SettingsScreen(
         }
 
         SectionCard(
-            title = "Pickup leg",
-            subtitle = "When the app does not show a pickup time, RideScore estimates it " +
-                "from this speed and rounds up to the next whole minute.",
+            title = "Riding speeds",
+            subtitle = "When an offer does not print a time, RideScore works it out " +
+                "from these speeds and rounds up to the next whole minute. Anything " +
+                "estimated is marked with a ~ on the card.",
         ) {
             NumberField("Pickup speed", settings.pickupSpeedKmph, "km/h", 1) { v ->
                 onChange { it.copy(pickupSpeedKmph = v) }
+            }
+            NumberField("Trip speed", settings.tripSpeedKmph, "km/h", 1) { v ->
+                onChange { it.copy(tripSpeedKmph = v) }
             }
             SwitchRow("Include pickup distance", settings.includePickupDistance) { on ->
                 onChange { it.copy(includePickupDistance = on) }

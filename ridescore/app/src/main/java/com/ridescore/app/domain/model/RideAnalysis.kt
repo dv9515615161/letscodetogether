@@ -52,6 +52,15 @@ data class RideAnalysis(
     /** True when pickup minutes were derived from pickup speed, not read on screen. */
     val pickupTimeEstimated: Boolean = false,
     /**
+     * True when the *trip* minutes were derived from the trip distance because
+     * the offer did not print them. Rapido often shows a fare and a distance
+     * and no duration at all, and treating that as a zero-minute ride is how
+     * a 12 km run comes out at Rs.4000 an hour.
+     */
+    val tripTimeEstimated: Boolean = false,
+    /** Trip minutes counted, read or estimated. */
+    val tripTimeMinutesCounted: Double = 0.0,
+    /**
      * Pickup minutes actually counted in [totalTimeMinutes]. Uber prints this
      * on the offer; Rapido does not, and it is estimated there.
      */

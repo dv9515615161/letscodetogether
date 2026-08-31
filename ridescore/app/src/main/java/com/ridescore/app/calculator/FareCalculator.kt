@@ -40,13 +40,25 @@ class FareCalculator(
         val countedPickupKm = if (s.includePickupDistance) pickupKm else 0.0
         val totalKm = tripKm + countedPickupKm
 
-        val tripMin = offer.tripTimeMinutes ?: 0.0
+        // A missing trip time used to count as zero minutes, which made a fare
+        // divided by the pickup leg alone: 12.6 km for Rs.126 came out at
+        // Rs.4365 an hour and was offered as a MAYBE. Estimating the leg from
+        // its distance is the same bargain already struck for the pickup leg -
+        // an honest approximation, marked as one - and it is the difference
+        // between calling that ride a MAYBE and calling it the reject it is.
+        val tripTimeEstimated = offer.tripTimeMinutes == null && tripKm > 0.0
+        val tripMin = offer.tripTimeMinutes
+            ?: estimateRidingMinutes(tripKm, s.tripSpeedKmph)
         val pickupTimeEstimated = offer.pickupTimeMinutes == null && pickupKm > 0.0
         val pickupMin = offer.pickupTimeMinutes
-            ?: estimatePickupMinutes(pickupKm, s.pickupSpeedKmph)
+            ?: estimateRidingMinutes(pickupKm, s.pickupSpeedKmph)
         val countedPickupMin = if (s.includePickupTime) pickupMin else 0.0
         val totalMin = tripMin + countedPickupMin
 
+        if (tripTimeEstimated) {
+            notes += "Trip time estimated at ${fmtMinutes(tripMin)} min " +
+                "(${fmtKmph(s.tripSpeedKmph)} km/h) - the offer did not show it"
+        }
         if (pickupTimeEstimated && s.includePickupTime) {
             notes += "Pickup time estimated at ${fmtMinutes(pickupMin)} min (${fmtKmph(s.pickupSpeedKmph)} km/h)"
         }
@@ -142,6 +154,8 @@ class FareCalculator(
             reasons = outcome.reasons,
             notes = offer.notes + notes,
             pickupTimeEstimated = pickupTimeEstimated,
+            tripTimeEstimated = tripTimeEstimated,
+            tripTimeMinutesCounted = tripMin,
             pickupTimeMinutesCounted = countedPickupMin,
             returnDistanceKm = returnKm,
             returnTimeMinutes = returnMin,
@@ -154,10 +168,14 @@ class FareCalculator(
          * the driver would actually see: 1.8 km at 17 km/h is 6.35 minutes,
          * shown and counted as 7.
          */
-        fun estimatePickupMinutes(pickupKm: Double, pickupSpeedKmph: Double): Double {
-            if (pickupKm <= 0.0 || pickupSpeedKmph <= 0.0) return 0.0
-            return ceil(pickupKm / pickupSpeedKmph * 60.0)
+        fun estimateRidingMinutes(km: Double, speedKmph: Double): Double {
+            if (km <= 0.0 || speedKmph <= 0.0) return 0.0
+            return ceil(km / speedKmph * 60.0)
         }
+
+        /** Kept as the old name for the pickup leg, which reads better there. */
+        fun estimatePickupMinutes(pickupKm: Double, pickupSpeedKmph: Double): Double =
+            estimateRidingMinutes(pickupKm, pickupSpeedKmph)
 
         private fun fmtMinutes(v: Double): String =
             if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.1f", v)
