@@ -113,13 +113,20 @@ class FareCalculatorTest {
     }
 
     @Test
-    fun `platform fee is only subtracted when the driver turns it on`() {
+    fun `the platform's cut is only subtracted on the commission plan`() {
         val on = calculator.analyse(
             offer(),
-            settings.copy(platformFeeEnabled = true, platformFeePercent = 10.0),
+            settings.copy(
+                earningsPlan = com.ridescore.app.domain.settings.EarningsPlan.COMMISSION,
+                commissionPercent = 10.0,
+                gstOnCommissionPercent = 0.0,
+            ),
         )
         assertEquals(6.0, on.platformFee, 0.001)
         assertEquals(29.36, on.netEarning, 0.001)
+
+        // The earnings plan is the default, and takes nothing per order.
+        assertEquals(0.0, calculator.analyse(offer(), settings).platformFee, 0.001)
     }
 
     @Test

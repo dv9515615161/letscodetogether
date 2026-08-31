@@ -2,6 +2,27 @@ package com.ridescore.app.domain.settings
 
 import com.ridescore.app.domain.model.SourceApp
 
+/**
+ * How the platform takes its cut.
+ *
+ * Rapido offers captains a choice, and the two are completely different
+ * arithmetic. The fare on an offer card is what the *customer* pays, so on the
+ * commission plan a good slice of it never reaches the driver.
+ */
+enum class EarningsPlan {
+    /** A percentage of every fare, plus GST on that percentage. */
+    COMMISSION,
+
+    /** A fixed fee per day or week, and then the fare is the driver's. */
+    SUBSCRIPTION;
+
+    val label: String
+        get() = when (this) {
+            COMMISSION -> "Commission"
+            SUBSCRIPTION -> "Earnings plan"
+        }
+}
+
 /** Which driver apps RideScore should watch. */
 enum class AppMode { RAPIDO_ONLY, UBER_ONLY, BOTH;
 
@@ -82,16 +103,42 @@ data class RideScoreSettings(
     // ---- Optional costs (off by default) --------------------------------
     val maintenanceEnabled: Boolean = false,
     val maintenancePerKm: Double = DEFAULT_MAINTENANCE_PER_KM,
-    val platformFeeEnabled: Boolean = false,
-    val platformFeePercent: Double = DEFAULT_PLATFORM_FEE_PERCENT,
     /**
-     * A flat amount the platform keeps from every order, whatever its size.
+     * Which plan the driver is on.
      *
-     * Rapido's rate card charges a handling fee per order alongside its
-     * percentage commission, and a percentage alone cannot express that: on a
-     * ₹38 order a ₹5 flat fee is 13%, on a ₹142 order it is 3.5%.
+     * Defaults to the earnings plan, whose per-order deduction is nothing, so
+     * RideScore never invents a cut the driver did not tell it about. The
+     * first-run setup asks, because on the commission plan every figure in the
+     * app is roughly a fifth too high until it is set.
      */
-    val platformFeeFixed: Double = 0.0,
+    val earningsPlan: EarningsPlan = EarningsPlan.SUBSCRIPTION,
+
+    /** Commission plan: the platform's percentage of the customer's fare. */
+    val commissionPercent: Double = DEFAULT_COMMISSION_PERCENT,
+
+    /**
+     * Commission plan: GST charged on the commission itself, not on the fare.
+     * 16% commission with 18% GST on it takes 18.88% of the fare, not 34%.
+     */
+    val gstOnCommissionPercent: Double = DEFAULT_GST_ON_COMMISSION_PERCENT,
+
+    /**
+     * A flat amount kept from every order, whatever its size - Rapido's
+     * handling fee. A percentage cannot express it: ₹5 is 13% of a ₹38 order
+     * and 3.5% of a ₹142 one, so it hurts small orders most.
+     */
+    val perOrderFee: Double = 0.0,
+
+    /**
+     * Earnings plan: what the plan costs per day.
+     *
+     * Deliberately *not* subtracted from individual offers. Once the day's fee
+     * is paid it is spent whatever the driver does next, so it has no bearing
+     * on whether this offer is worth taking - it belongs to the decision about
+     * whether to go out at all. RideScore shows it rather than burying it in
+     * the rate.
+     */
+    val dailyPlanFee: Double = 0.0,
 
     // ---- Output ---------------------------------------------------------
     val overlayEnabled: Boolean = true,
@@ -175,6 +222,19 @@ data class RideScoreSettings(
             return if (remaining > 0 && incentiveBonus > 0.0) incentiveBonus / remaining else 0.0
         }
 
+    /**
+     * What the platform actually keeps from a fare, as a percentage.
+     *
+     * On the commission plan that is the commission plus GST charged on the
+     * commission: 16% with 18% GST on it is 18.88% of the fare.
+     */
+    val effectiveCommissionPercent: Double
+        get() = if (earningsPlan == EarningsPlan.COMMISSION) {
+            commissionPercent * (1.0 + gstOnCommissionPercent / 100.0)
+        } else {
+            0.0
+        }
+
     /** Rs. per km of fuel. 120 / 37.5 = 3.20 */
     val fuelCostPerKm: Double
         get() = if (mileageKmPerLitre > 0.0) petrolPricePerLitre / mileageKmPerLitre else 0.0
@@ -199,8 +259,10 @@ data class RideScoreSettings(
         emptyReturnFraction = emptyReturnFraction.coerceIn(0.0, 1.0),
         overlayTextScale = overlayTextScale.coerceIn(0.8f, 2.0f),
         maintenancePerKm = maintenancePerKm.coerceIn(0.0, 100.0),
-        platformFeePercent = platformFeePercent.coerceIn(0.0, 90.0),
-        platformFeeFixed = platformFeeFixed.coerceIn(0.0, 1_000.0),
+        commissionPercent = commissionPercent.coerceIn(0.0, 90.0),
+        gstOnCommissionPercent = gstOnCommissionPercent.coerceIn(0.0, 100.0),
+        perOrderFee = perOrderFee.coerceIn(0.0, 1_000.0),
+        dailyPlanFee = dailyPlanFee.coerceIn(0.0, 10_000.0),
     )
 
     companion object {
@@ -212,7 +274,8 @@ data class RideScoreSettings(
         const val DEFAULT_MIN_NET_PER_KM = 9.0
         const val DEFAULT_PICKUP_SPEED = 17.0
         const val DEFAULT_MAINTENANCE_PER_KM = 1.5
-        const val DEFAULT_PLATFORM_FEE_PERCENT = 10.0
+        const val DEFAULT_COMMISSION_PERCENT = 16.0
+        const val DEFAULT_GST_ON_COMMISSION_PERCENT = 18.0
 
         val MILEAGE_PRESETS = listOf(35.0, 36.0, 37.0, 37.5, 38.0, 39.0, 40.0)
 

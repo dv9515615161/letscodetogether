@@ -63,7 +63,11 @@ class IncentiveTest {
     fun `commission is charged on the fare, not on the bonus`() {
         val withFee = calculator.analyse(
             offer(totalFare = 100.0),
-            quest.copy(platformFeeEnabled = true, platformFeePercent = 10.0),
+            quest.copy(
+                earningsPlan = com.ridescore.app.domain.settings.EarningsPlan.COMMISSION,
+                commissionPercent = 10.0,
+                gstOnCommissionPercent = 0.0,
+            ),
         )
         assertEquals(10.0, withFee.platformFee, 0.001)
     }

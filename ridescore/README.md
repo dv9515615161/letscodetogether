@@ -132,6 +132,35 @@ or one switch away:
 RideScore deliberately does not use a full-screen intent to force itself in
 front of the offer. That would cover the screen the driver is trying to read.
 
+### The fare on the offer is what the *customer* pays
+
+On Rapido that matters, because captains choose between two plans and they are
+completely different arithmetic:
+
+- **Commission plan** — Rapido keeps a percentage of every fare, and GST is
+  charged on that commission. 16% commission with 18% GST on it is **18.88% of
+  the fare**, not 34%: the GST applies to the commission, not to the fare.
+- **Earnings plan** — a fixed fee per day, and then the fare is the driver's.
+  Rapido's rate card shows 0% commission on this one.
+
+Set it in the first-run setup or under **Settings ▸ Your plan**; the rate card
+inside Rapido shows which you are on, under *Rapido's Commission*. On the
+commission plan every figure RideScore shows is about a fifth too high until
+this is set, so it asks rather than assuming.
+
+The default is the earnings plan, whose per-order deduction is nothing — so
+RideScore never invents a cut the driver did not tell it about.
+
+**The daily plan fee is deliberately not subtracted from individual offers.**
+Once the day's fee is paid it is spent whichever order comes next, so it has no
+bearing on whether *this* offer is worth taking. It belongs to the decision
+about whether to go out at all, and burying it in a per-offer rate would make
+every offer look worse than the choice actually is.
+
+A **handling fee per order** is separate and is subtracted, because it is
+charged per order. It is flat, which is exactly what makes it bite hardest on
+small ones: ₹5 is 13% of a ₹38 order and 3.5% of a ₹142 one.
+
 ### Trip-count bonuses
 
 Both apps run them - "12 trips today for ₹300" - and while one is live an offer

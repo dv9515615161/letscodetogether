@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ridescore.app.domain.settings.EarningsPlan
 import com.ridescore.app.domain.settings.RideScoreSettings
 import com.ridescore.app.util.Format
 
@@ -86,6 +87,51 @@ fun SetupScreen(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
         )
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Which Rapido plan are you on?", fontWeight = FontWeight.SemiBold)
+            Text(
+                "The fare on an offer is what the customer pays. On the commission plan " +
+                    "part of it never reaches you, so RideScore has to know which plan " +
+                    "you are on or its figures will be too high. Your rate card in Rapido " +
+                    "shows it under \"Rapido's Commission\".",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ChipRow(
+                options = EarningsPlan.entries.toList(),
+                selected = settings.earningsPlan,
+                label = { it.label },
+                onSelect = { plan -> onChange { it.copy(earningsPlan = plan) } },
+            )
+
+            if (settings.earningsPlan == EarningsPlan.COMMISSION) {
+                NumberField("Commission", settings.commissionPercent, "% of the fare", 1) { v ->
+                    onChange { it.copy(commissionPercent = v) }
+                }
+                NumberField("GST on that commission", settings.gstOnCommissionPercent, "%", 1) { v ->
+                    onChange { it.copy(gstOnCommissionPercent = v) }
+                }
+                Text(
+                    "Rapido keeps ${Format.decimal(settings.effectiveCommissionPercent, 2)}% " +
+                        "of each fare on those numbers.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            } else {
+                NumberField("What the plan costs you", settings.dailyPlanFee, "₹ per day", 0) { v ->
+                    onChange { it.copy(dailyPlanFee = v) }
+                }
+                Text(
+                    "This is not taken off individual offers. Once you have paid for the " +
+                        "day it is spent whichever order you take next, so it does not " +
+                        "change whether this one is worth it - it only changes whether " +
+                        "the day was.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
 
         Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Done") }
         Spacer(Modifier.height(24.dp))

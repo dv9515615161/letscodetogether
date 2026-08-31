@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ridescore.app.data.log.LogStats
 import com.ridescore.app.domain.settings.AppMode
+import com.ridescore.app.domain.settings.EarningsPlan
 import com.ridescore.app.domain.settings.OverlayMode
 import com.ridescore.app.domain.settings.RideScoreSettings
 import com.ridescore.app.util.Format
@@ -130,9 +131,50 @@ fun SettingsScreen(
         }
 
         SectionCard(
-            title = "Optional costs",
-            subtitle = "Off by default. With both off, net earning means fare minus fuel, " +
-                "and nothing else is claimed.",
+            title = "Your plan",
+            subtitle = "The fare on an offer is what the customer pays. On the commission " +
+                "plan part of it never reaches you.",
+        ) {
+            ChipRow(
+                options = EarningsPlan.entries.toList(),
+                selected = settings.earningsPlan,
+                label = { it.label },
+                onSelect = { plan -> onChange { it.copy(earningsPlan = plan) } },
+            )
+
+            if (settings.earningsPlan == EarningsPlan.COMMISSION) {
+                NumberField("Commission", settings.commissionPercent, "% of the fare", 1) { v ->
+                    onChange { it.copy(commissionPercent = v) }
+                }
+                NumberField("GST on that commission", settings.gstOnCommissionPercent, "%", 1) { v ->
+                    onChange { it.copy(gstOnCommissionPercent = v) }
+                }
+                LabelledValue(
+                    "Rapido keeps",
+                    "${Format.decimal(settings.effectiveCommissionPercent, 2)}% of each fare",
+                )
+            } else {
+                NumberField("Plan cost", settings.dailyPlanFee, "₹ per day", 0) { v ->
+                    onChange { it.copy(dailyPlanFee = v) }
+                }
+                Text(
+                    "Not taken off individual offers - a day's fee is spent whichever " +
+                        "order you take next, so it belongs to the question of whether " +
+                        "to go out, not to this offer.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            NumberField("Handling fee per order", settings.perOrderFee, "₹", 2) { v ->
+                onChange { it.copy(perOrderFee = v) }
+            }
+        }
+
+        SectionCard(
+            title = "Maintenance",
+            subtitle = "Off by default. With it off, net earning means fare minus fuel and " +
+                "the platform's cut, and nothing else is claimed.",
         ) {
             SwitchRow("Maintenance cost", settings.maintenanceEnabled) { on ->
                 onChange { it.copy(maintenanceEnabled = on) }
@@ -144,28 +186,6 @@ fun SettingsScreen(
                 2,
                 enabled = settings.maintenanceEnabled,
             ) { v -> onChange { it.copy(maintenancePerKm = v) } }
-
-            SwitchRow(
-                label = "Platform fee / commission",
-                checked = settings.platformFeeEnabled,
-                description = "Only if the fare on the offer is before the platform's cut. " +
-                    "If what you are shown is already what reaches your wallet, leave this off.",
-            ) { on -> onChange { it.copy(platformFeeEnabled = on) } }
-            NumberField(
-                "Platform fee",
-                settings.platformFeePercent,
-                "% of fare",
-                1,
-                enabled = settings.platformFeeEnabled,
-            ) { v -> onChange { it.copy(platformFeePercent = v) } }
-
-            NumberField(
-                "Fixed fee per order",
-                settings.platformFeeFixed,
-                "₹",
-                2,
-                enabled = settings.platformFeeEnabled,
-            ) { v -> onChange { it.copy(platformFeeFixed = v) } }
         }
 
         SectionCard(title = "Overlay") {
