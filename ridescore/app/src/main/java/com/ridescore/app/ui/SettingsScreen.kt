@@ -36,6 +36,9 @@ fun SettingsScreen(
     logStats: LogStats,
     onShareLog: () -> Unit,
     onClearLog: () -> Unit,
+    rideStats: LogStats = LogStats(),
+    onShareRideLog: () -> Unit = {},
+    onClearRideLog: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -392,6 +395,46 @@ fun SettingsScreen(
                 }
                 OutlinedButton(onClick = onClearLog, enabled = !logStats.isEmpty) {
                     Text("Delete log")
+                }
+            }
+        }
+
+        SectionCard(
+            title = "Completed rides",
+            subtitle = "When a ride finishes, Rapido shows an order-details screen with " +
+                "what it really took and what really arrived. RideScore can read that " +
+                "and keep it, so you can compare what the app predicted against what " +
+                "happened. Same rules as the offer log: it stays on this phone.",
+        ) {
+            SwitchRow(
+                label = "Keep a log of finished rides",
+                checked = settings.rideLogEnabled,
+                description = "Records the real minutes, the real kilometres and the " +
+                    "real payout - the only numbers in the app that are not a forecast.",
+            ) { on -> onChange { it.copy(rideLogEnabled = on) } }
+
+            if (rideStats.isEmpty) {
+                Text(
+                    if (settings.rideLogEnabled) {
+                        "No finished rides yet. Open a completed order's details once " +
+                            "and it will appear here."
+                    } else {
+                        "Not recording finished rides."
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                LabelledValue("Rides recorded", rideStats.rows.toString())
+                rideStats.lastEntry?.let { LabelledValue("Latest", it) }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onShareRideLog, enabled = !rideStats.isEmpty) {
+                    Text("Export")
+                }
+                OutlinedButton(onClick = onClearRideLog, enabled = !rideStats.isEmpty) {
+                    Text("Delete")
                 }
             }
         }

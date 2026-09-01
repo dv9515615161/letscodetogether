@@ -262,6 +262,15 @@ data class RideScoreSettings(
      * Off by default: it is the only thing RideScore writes to disk.
      */
     val offerLogEnabled: Boolean = false,
+    /**
+     * Keep a local record of rides that actually finished, read off the
+     * order-details screen.
+     *
+     * Separate from the offer log and separately opt-in, because it records
+     * something different: not what the app advised, but what happened. It is
+     * the only way to check the advice was any good.
+     */
+    val rideLogEnabled: Boolean = false,
 
     // ---- Onboarding ------------------------------------------------------
     /**

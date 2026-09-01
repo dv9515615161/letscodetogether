@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.ridescore.app.data.log.OfferLogger
+import com.ridescore.app.data.log.RideLogger
 import com.ridescore.app.data.settings.SettingsCache
 import com.ridescore.app.data.settings.SettingsRepository
 import com.ridescore.app.data.speed.SpeedProfileStore
@@ -56,6 +57,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
     private var overlay: OverlayController? = null
     private var notifier: DecisionNotifier? = null
     private var offerLog: OfferLogger? = null
+    private var rideLog: RideLogger? = null
     private var voice: VoiceAnnouncer? = null
 
     private val keyguardManager: KeyguardManager? by lazy {
@@ -98,6 +100,9 @@ class RideScoreAccessibilityService : AccessibilityService() {
                 speedProfile.observe(km, minutes, at, SettingsCache.current)
             },
             liveAnchorSpeed = { at -> speedProfile.liveAnchorSpeed(at, SettingsCache.current) },
+            receiptObserver = { receipt ->
+                if (SettingsCache.current.rideLogEnabled) rideLog?.log(receipt)
+            },
         )
         pipeline = OfferPipeline(
             engine = engine,
@@ -110,6 +115,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
         overlay = OverlayController(this)
         notifier = DecisionNotifier(applicationContext)
         offerLog = OfferLogger(applicationContext)
+        rideLog = RideLogger(applicationContext)
         voice = VoiceAnnouncer(applicationContext)
 
         scope.launch {
@@ -343,6 +349,7 @@ class RideScoreAccessibilityService : AccessibilityService() {
         notifier?.cancel()
         notifier = null
         offerLog = null
+        rideLog = null
         voice?.shutdown()
         voice = null
         scope.cancel()

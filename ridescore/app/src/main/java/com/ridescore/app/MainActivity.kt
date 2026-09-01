@@ -92,6 +92,7 @@ class MainActivity : ComponentActivity() {
                 var tab by remember { mutableIntStateOf(0) }
                 var sample by remember { mutableStateOf<ScreenAnalysis?>(null) }
                 val logStats by viewModel.logStats.collectAsState()
+                val rideStats by viewModel.rideStats.collectAsState()
                 val scope = rememberCoroutineScope()
 
                 LaunchedEffect(tab, settings.offerLogEnabled) { viewModel.refreshLogStats() }
@@ -154,6 +155,24 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onClearLog = { viewModel.clearLog() },
+                            rideStats = rideStats,
+                            onShareRideLog = {
+                                scope.launch {
+                                    val intent = viewModel.shareRideLogIntent()
+                                    if (intent == null) {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "No finished rides recorded yet",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    } else {
+                                        startActivity(
+                                            Intent.createChooser(intent, "Send completed rides"),
+                                        )
+                                    }
+                                }
+                            },
+                            onClearRideLog = { viewModel.clearRideLog() },
                             settings = settings,
                             onChange = { transform -> viewModel.update(transform) },
                             onReset = { viewModel.resetToDefaults() },

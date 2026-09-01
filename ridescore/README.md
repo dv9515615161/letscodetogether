@@ -290,6 +290,37 @@ stress test cover the gap.
 Turn it off with **Settings ▸ Learn road speed from the apps** if you would
 rather the app used only the fixed number you set.
 
+### What actually happened: the completed-rides log
+
+Everything else in RideScore is a forecast. When a ride finishes, Rapido shows
+an order-details screen that is not:
+
+```
+Bike Order Details
+Your Earning  ₹28.54
+1.17 km · 4.72 min
+Customer Fare                       ₹40
+Government Taxes and Other Fees  −₹5.46
+Commission (16.00% of Customer Fare) −₹6
+Total Earning                    ₹28.54
+```
+
+Those minutes are measured, not estimated, and that ₹28.54 is what really
+arrived. With **Settings ▸ Completed rides** on, RideScore reads that screen
+and appends a row to a second local file, `rides.csv`: real distance, real
+minutes, real payout, the deduction and what percentage it came to, plus the
+speed the ride actually ran at.
+
+Put beside the offer log it answers the questions no amount of reasoning can —
+whether the estimated minutes were right, whether the deduction settings match
+the real payout, and what an hour of accepted work actually paid. It also turns
+a nuisance into data: before this, receipt screens leaked into the offer log as
+phantom offers with fares like ₹197.04 and ₹105.86, and one receipt was parsed
+as *two* offers at once.
+
+Same rules as the offer log: off by default, private to the app, capped in
+size, and it leaves the phone only when you share it.
+
 ### Screens RideScore stays off
 
 A plan page, the subscription page, a rate card and a finished order's receipt

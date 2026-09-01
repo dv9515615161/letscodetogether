@@ -4,6 +4,8 @@ import com.ridescore.app.calculator.FareCalculator
 import com.ridescore.app.decision.OfferRanker
 import com.ridescore.app.domain.model.ScreenAnalysis
 import com.ridescore.app.domain.model.ScreenSnapshot
+import com.ridescore.app.domain.receipt.ReceiptParser
+import com.ridescore.app.domain.receipt.RideReceipt
 import com.ridescore.app.domain.settings.RideScoreSettings
 import com.ridescore.app.parser.ParserRegistry
 import com.ridescore.app.parser.TripState
@@ -26,6 +28,11 @@ open class RideScoreEngine(
     private val speedObserver: (Double, Double, Long) -> Unit = { _, _, _ -> },
     /** The learned anchor speed for right now, or null if nothing is known. */
     private val liveAnchorSpeed: (Long) -> Double? = { null },
+    /**
+     * Called when a finished order's details screen is read. This is the only
+     * moment the app learns what a ride really took and really paid.
+     */
+    private val receiptObserver: (RideReceipt) -> Unit = { },
 ) {
 
     open fun analyse(snapshot: ScreenSnapshot, settings: RideScoreSettings): ScreenAnalysis {
@@ -41,9 +48,20 @@ open class RideScoreEngine(
             return ScreenAnalysis.empty(snapshot.sourceApp)
         }
 
-        // Nor is a plan page, a rate card, a finished order's receipt or a
-        // status toast. They carry rupee figures and no ride, and a card over
-        // them is worse than useless - it covers the page being read.
+        // A finished order's details screen is not an offer either - but it is
+        // the one screen worth reading for its own sake, because it says what
+        // the ride really took and really paid. Read it, record it, show
+        // nothing. Left only to the suppression below, its figures used to
+        // leak into the offer log as phantom offers: fares of ₹197.04 and
+        // ₹105.86, and one receipt parsed as two offers at once.
+        ReceiptParser.parse(snapshot)?.let { receipt ->
+            receiptObserver(receipt)
+            return ScreenAnalysis.empty(snapshot.sourceApp)
+        }
+
+        // Nor is a plan page, a rate card or a status toast. They carry rupee
+        // figures and no ride, and a card over them is worse than useless - it
+        // covers the page being read.
         if (TripState.looksLikeNonOfferScreen(snapshot)) {
             return ScreenAnalysis.empty(snapshot.sourceApp)
         }
