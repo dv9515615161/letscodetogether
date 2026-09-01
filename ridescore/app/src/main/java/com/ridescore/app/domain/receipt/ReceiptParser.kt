@@ -60,6 +60,17 @@ object ReceiptParser {
     private val MONEY = Regex("""₹\s*(\d+(?:\.\d{1,2})?)""")
     private val KM = Regex("""(\d+(?:\.\d{1,2})?)\s*km""")
     private val MIN = Regex("""(\d+(?:\.\d{1,2})?)\s*min""")
+
+    /**
+     * The ride's own summary line: "13.54 km · 31.38 min".
+     *
+     * Both figures have to come from this one line. Taking the first "N km"
+     * anywhere on screen picks up the *pickup* distance once the receipt is
+     * scrolled, and a real log duly recorded rides of 0.35, 0.67 and 0.78 km -
+     * every one of them a pickup leg wearing the trip's name.
+     */
+    private val RIDE_SUMMARY =
+        Regex("""(\d+(?:\.\d{1,2})?)\s*km\s*[·.\-|]?\s*(\d+(?:\.\d{1,2})?)\s*min""")
     private val TIME_OF_DAY = Regex("""\d{1,2}:\d{2}\s*(am|pm)""")
 
     fun parse(snapshot: ScreenSnapshot): RideReceipt? {
@@ -75,6 +86,19 @@ object ReceiptParser {
         if (markers < MIN_MARKERS) return null
 
         val raw = snapshot.allLines
+        // The ride's distance and duration, from the one line that carries
+        // both. Without a duration this is a half-drawn screen, not a ride -
+        // and the duration is the whole point of keeping the log.
+        val summary = raw.firstNotNullOfOrNull { line ->
+            RIDE_SUMMARY.find(line)?.let { m ->
+                val km = m.groupValues[1].toDoubleOrNull()
+                val minutes = m.groupValues[2].toDoubleOrNull()
+                if (km != null && minutes != null) km to minutes else null
+            }
+        } ?: return null
+
+        val orderTime = raw.firstNotNullOfOrNull { TIME_OF_DAY.find(it.lowercase())?.value }
+
         val table = readTable(lines, raw)
 
         // "Total Earning" is the last row of the table on a commission-plan
@@ -94,12 +118,12 @@ object ReceiptParser {
             taxesAndFees = table["government taxes"]
                 ?: labelledMoney(lines, raw, "government taxes")
                 ?: labelledMoney(lines, raw, "taxes and other fees"),
-            tripKm = firstMatch(raw, KM),
-            tripMinutes = firstMatch(raw, MIN),
+            tripKm = summary.first,
+            tripMinutes = summary.second,
             pickupKm = labelledNumber(lines, raw, "pickup", KM),
             rideType = rideType(raw),
-            orderTime = raw.firstNotNullOfOrNull { TIME_OF_DAY.find(it.lowercase())?.value },
-            signature = signature(total, raw),
+            orderTime = orderTime,
+            signature = signature(snapshot.sourceApp, orderTime, total),
         )
     }
 
@@ -185,9 +209,17 @@ object ReceiptParser {
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
 
-    /** Enough to recognise the same receipt if the screen repaints. */
-    private fun signature(total: Double, raw: List<String>): String =
-        "%.2f/%s".format(total, raw.take(4).joinToString("|").take(80))
+    /**
+     * What makes a ride *that* ride: the app, the time printed on the order,
+     * and what it paid.
+     *
+     * Deliberately not the screen text. The old signature took the first few
+     * lines, so the same receipt scrolled two ways looked like two rides - one
+     * ₹140.05 trip was written to the log eight times, and eight rides came
+     * out as forty rows.
+     */
+    private fun signature(app: SourceApp, orderTime: String?, total: Double): String =
+        "${app.name}|${orderTime.orEmpty()}|%.2f".format(total)
 
     /** One marker could be a coincidence; two is a receipt. */
     private const val MIN_MARKERS = 2
