@@ -48,6 +48,12 @@ object TripState {
         // A completed order's receipt - fares, distances and times, all past.
         "order details", "payment info", "total earning", "customer fare",
         "government taxes", "fare received", "charges received",
+        // The earnings and order-history screens. These list finished rides
+        // with their payouts, which is exactly what a fare looks like: the
+        // ₹197.04, ₹211.19 and ₹105.86 "offers" in one real log came from
+        // here, along with a day total of ₹389.9.
+        "order history", "all orders", "completed orders", "order earnings",
+        "saved with subscription", "view rate card",
         // Status toasts and prompts.
         "unable to go offline", "ready to go?", "go online", "go offline",
         "go to area order",

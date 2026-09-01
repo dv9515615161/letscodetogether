@@ -321,6 +321,19 @@ as *two* offers at once.
 Same rules as the offer log: off by default, private to the app, capped in
 size, and it leaves the phone only when you share it.
 
+Two receipt layouts exist and both are read. A commission-plan receipt ends
+with a "Total Earning" row; a subscription-plan one has no such row at all —
+the amount sits at the top under "Your Earning" — and adds a **Customer Extra**
+row. The extra matters, because the platform's fee is charged on it: a ₹52 fare
+with a ₹10 extra was billed ₹5.76, which is 9.29% of ₹62, not of ₹52. The
+payment table is two columns, and depending on how the screen is walked its
+text arrives either interleaved or as every label followed by every amount, so
+the parser matches the rows up either way.
+
+That seventh receipt is also the best evidence yet for the deduction formula:
+₹2.87 + 4.65% of ₹62 is ₹5.75 against the ₹5.76 actually taken — one paisa,
+from a formula fitted on six earlier payouts, on the other plan.
+
 ### Screens RideScore stays off
 
 A plan page, the subscription page, a rate card and a finished order's receipt

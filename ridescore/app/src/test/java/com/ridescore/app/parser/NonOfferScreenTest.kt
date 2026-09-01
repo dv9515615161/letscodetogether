@@ -5,6 +5,7 @@ import com.ridescore.app.domain.settings.RideScoreSettings
 import com.ridescore.app.engine.RideScoreEngine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -145,6 +146,46 @@ class NonOfferScreenTest {
         val analysis = engine.analyse(rapido(live), settings)
         assertEquals(1, analysis.ranked.size)
         assertEquals(45.0, analysis.ranked.first().offer.totalFare!!, 0.001)
+    }
+
+    /** The "All Orders" earnings screen: a day total and a list of payouts. */
+    private val orderHistory = listOf(
+        "All Orders",
+        "Day", "Week", "Month",
+        "Sun 30", "Mon 31", "Tue 1",
+        "₹389.9",
+        "Order Earnings",
+        "8",
+        "Completed Orders",
+        "Order History",
+        "Completed", "Cancelled", "Missed",
+        "01 September, 2026",
+        "Bike · 2:21 pm",
+        "₹56.24",
+        "Bandam Kommu, Chanda Nagar, Ramacha...",
+        "2-38/5/42, Stalin Colony, Hyderabad, Miya...",
+        "Bike · 2:07 pm",
+        "₹29.57",
+        "Vemana Colony, Chanda Nagar, Hyderabad",
+        "Bike · 1:30 pm",
+        "₹140.05",
+    )
+
+    @Test
+    fun `the earnings screen is not a list of offers`() {
+        // Every payout on it looks exactly like a fare. In a real log this
+        // screen produced phantom offers of ₹197.04, ₹211.19 and ₹105.86.
+        assertTrue(TripState.looksLikeNonOfferScreen(rapido(orderHistory)))
+        assertTrue(engine.analyse(rapido(orderHistory), settings).ranked.isEmpty())
+    }
+
+    @Test
+    fun `nor is it mistaken for one finished ride`() {
+        // It has no ride in it - no distance, no duration, no payment table.
+        // Recording ₹389.9 as a ride would be worse than ignoring the screen.
+        assertNull(
+            com.ridescore.app.domain.receipt.ReceiptParser.parse(rapido(orderHistory)),
+        )
     }
 
     @Test

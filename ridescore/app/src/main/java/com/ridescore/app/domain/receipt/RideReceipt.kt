@@ -18,6 +18,14 @@ data class RideReceipt(
     val totalEarning: Double,
     /** What the customer paid, when the screen breaks it out. */
     val customerFare: Double? = null,
+    /**
+     * A tip or an add-on the customer paid on top of the fare.
+     *
+     * Worth its own field because the platform's fee is charged on it too: a
+     * ₹52 fare with a ₹10 extra was billed ₹5.76, which is 9.29% of ₹62, not
+     * of ₹52.
+     */
+    val customerExtra: Double? = null,
     val commission: Double? = null,
     val taxesAndFees: Double? = null,
     /** The paid leg, as the platform measured it. */
@@ -37,7 +45,11 @@ data class RideReceipt(
     val earningPerKm: Double?
         get() = tripKm?.takeIf { it > 0.0 }?.let { totalEarning / it }
 
+    /** Everything the customer paid, fare and extra together. */
+    val grossBeforeDeductions: Double?
+        get() = customerFare?.let { it + (customerExtra ?: 0.0) }
+
     /** The platform's share, when the screen showed enough to work it out. */
     val deducted: Double?
-        get() = customerFare?.let { it - totalEarning }
+        get() = grossBeforeDeductions?.let { it - totalEarning }
 }
