@@ -196,9 +196,9 @@ class FareCalculator(
             estimateRidingMinutes(pickupKm, pickupSpeedKmph)
 
         private fun fmtMinutes(v: Double): String =
-            if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.1f", v)
+            if (v % 1.0 == 0.0) v.toInt().toString() else String.format(java.util.Locale.US, "%.1f", v)
 
         private fun fmtKmph(v: Double): String =
-            if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.1f", v)
+            if (v % 1.0 == 0.0) v.toInt().toString() else String.format(java.util.Locale.US, "%.1f", v)
     }
 }

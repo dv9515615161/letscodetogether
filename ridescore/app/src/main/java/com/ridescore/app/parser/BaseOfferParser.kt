@@ -393,8 +393,17 @@ abstract class BaseOfferParser(override val sourceApp: SourceApp) : RideOfferPar
         )
     }
 
+    /**
+     * Locale-independent on purpose. `String.format` without a locale uses the
+     * phone's, which turns 4.59 into "4,59" in German and into Arabic-Indic
+     * digits in Arabic - and, with the Devanagari numbering extension, into
+     * Hindi digits on an Indian phone set to Hindi. These strings end up in
+     * the notes on the card next to figures formatted through `Format`, which
+     * always uses Locale.US, so they have to agree.
+     */
     private fun fmt(v: Double): String =
-        if (v % 1.0 == 0.0) v.toInt().toString() else String.format("%.2f", v)
+        if (v % 1.0 == 0.0) v.toInt().toString()
+        else String.format(java.util.Locale.US, "%.2f", v)
 
     companion object {
         /*
