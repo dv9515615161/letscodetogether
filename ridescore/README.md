@@ -457,10 +457,44 @@ block is about the category, not about anything found in this app.
 
 To install anyway:
 
-1. Play Store → profile picture → **Play Protect** → **⚙️ gear** → turn off
-   *Scan apps with Play Protect*.
-2. Open the APK again and install it.
-3. Turn Play Protect back on. If it then offers to uninstall RideScore, keep it.
+1. On the "App blocked" dialog, tap **More details** → **Install anyway**. On
+   most builds this is all that is needed and Play Protect stays on.
+2. If there is no such option: Play Store → profile picture → **Play Protect**
+   → **⚙️ gear** → turn off *Scan apps with Play Protect*, install, turn it
+   back on. If it then offers to uninstall RideScore, keep it.
+
+### The Play Protect switch itself is greyed out
+
+Common on 2024-and-later phones, and usually **not** Play Protect at all —
+something else is holding it down. In rough order of likelihood:
+
+- **Samsung: Auto Blocker.** On One UI 6.1 and newer this is *on by default*,
+  blocks sideloading outright, and greys out the controls that would let you
+  allow it. **Settings ▸ Security and privacy ▸ Auto Blocker ▸ off.** This is
+  the answer on most newer Samsung devices.
+- **Xiaomi / Redmi / POCO.** *Settings ▸ Passwords & security ▸ System
+  security* — turn off **Scan before installing** and, on HyperOS, **Enhanced
+  security**. MIUI also re-enables these after some updates.
+- **Realme / OPPO / vivo / OnePlus.** *Settings ▸ Security / Security check* —
+  turn off **Payment protection** or **App security check**.
+- **A managed or supervised phone.** A work profile, an employer's MDM, or
+  Family Link supervision locks the toggle and no OEM setting will free it.
+  Check **Settings ▸ Security ▸ Device admin apps**. If something is listed,
+  that is the cause, and the account holder has to allow the install.
+- **An out-of-date Play Store.** Play Store ▸ profile ▸ Settings ▸ About ▸
+  *Update Play Store*, then reboot. A stale Play Services can grey the switch.
+
+Two routes that avoid the fight entirely:
+
+- **Install over USB from the Mac.** `adb install -r ridescore.apk` goes
+  through a different installer path and is usually not blocked. It needs
+  Developer options ▸ USB debugging on the phone, and the platform-tools
+  package on the Mac.
+- **Ship it through Play internal testing.** A one-time developer account fee,
+  and then testers install from the Play Store itself, so Play Protect never
+  objects on any device. See [RELEASING.md](RELEASING.md). This is the only
+  approach that scales past your own phone: every new device is another round
+  of this, and on a managed phone there is no round to win.
 
 ### The Accessibility switch is greyed out
 
