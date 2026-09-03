@@ -9,6 +9,74 @@ avoids it.
 Read the [Risks](#risks-worth-knowing-before-you-spend-money) section before
 spending money on any of this.
 
+Everything on Google's side below was accurate when this was written; Play
+policy changes without notice, so treat the Console itself as the authority and
+this as the order to do things in.
+
+---
+
+## The shortest path
+
+Most of what makes this feel like a hassle is doing it in the wrong order and
+then waiting. Two things take real calendar time — account verification and the
+closed test — so both start on day one and everything else happens while they
+run.
+
+**Day 1, about two hours.** Do all four; none blocks the others.
+
+1. **Pay and sign up** at <https://play.google.com/console>. Verification takes
+   days, so this goes first even though it is the least interesting.
+2. **Create the signing key** and add the four CI secrets — §2 below. This also
+   fixes the Play Protect hard block on sideloaded builds in the meantime.
+3. **Publish the privacy policy.** `docs/privacy.html` is written. In the
+   repository: **Settings ▸ Pages ▸ Source: main branch, /docs folder**. Wait
+   two minutes and the URL is
+   `https://<your-github-username>.github.io/letscodetogether/privacy.html`.
+   Play requires a live URL, and this one is free and permanent.
+4. **Take two screenshots** on your phone — the Home tab, and the card over a
+   real Rapido offer. Two is the minimum Play accepts. Everything else in
+   `store/` is already made: the 512px icon and the 1024×500 feature graphic.
+
+**Day 1, evening: line up 12 testers.** A personal account cannot reach
+production until 12 people have been opted into a closed test for 14
+*continuous* days. You already know 12 bike-taxi drivers, which is the part
+most developers struggle with — this is your advantage, not your obstacle.
+Collect the Google account email each of them uses on their phone.
+
+**Day 2–3, once verification clears.** Create the app, paste the listing from
+[PLAY_LISTING.md](PLAY_LISTING.md) — name, short and full description,
+accessibility declaration, data-safety answers, all written — upload the
+`.aab` from §3, and start the closed test with those 12 emails.
+
+**Then wait 14 days.** Keep the testers opted in; the clock restarts if the
+count drops. Use the fortnight to fix whatever the drivers report, pushing new
+builds to the same closed track. That is what the fortnight is *for*.
+
+**Day 17-ish: apply for production access,** then submit for review. Review of
+an accessibility app is slower than average — allow a week and do not plan
+anything around a specific date.
+
+Realistically: **about three weeks from paying the fee**, nearly all of it
+waiting rather than working. An organisation account skips the 14-day test but
+needs a D-U-N-S number for a registered business, which is its own delay unless
+you already have one.
+
+### What is already done
+
+| | Status |
+|---|---|
+| App name, descriptions | Written — [PLAY_LISTING.md](PLAY_LISTING.md) |
+| Accessibility declaration | Written |
+| Data safety answers | Written |
+| Privacy policy | Written — `docs/privacy.html`, needs Pages turned on |
+| App icon, feature graphic | Made — `store/` |
+| Content rating, pricing | Decided — free, no ads, no IAP |
+| Signed release build | Automatic once the four secrets are set |
+| Screenshots | **You have to take these** |
+| 12 testers | **You have to find these** |
+
+Two items on that list are yours. The rest is done.
+
 ---
 
 ## 1. Google Play developer account
