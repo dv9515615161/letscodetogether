@@ -52,6 +52,41 @@ keyPassword=...
 Enrol in **Play App Signing** when you upload (the default). Google then holds
 the signing key and your upload key can be replaced if lost.
 
+### Give the same key to CI, so the APK it publishes is signed too
+
+Until this is done, CI publishes a **debug** APK, signed with
+`androiddebugkey` — the certificate every Android developer's debug builds
+share, password `android`. Play Protect weighs that heavily, and for an app
+declaring an accessibility service the result on Android 13 and newer is the
+hard *"App blocked to protect your device"* dialog with **no "Install anyway"
+button on it**. There is nothing to tap past. A release APK signed with your
+own key is a different signal.
+
+On the Mac:
+
+```bash
+base64 -i ridescore-release.jks | pbcopy   # now on your clipboard
+```
+
+Then in the repository: **Settings ▸ Secrets and variables ▸ Actions ▸ New
+repository secret**, four of them:
+
+| Secret | Value |
+|---|---|
+| `RIDESCORE_KEYSTORE_BASE64` | paste the clipboard |
+| `RIDESCORE_KEYSTORE_PASSWORD` | the store password you chose |
+| `RIDESCORE_KEY_ALIAS` | `ridescore` |
+| `RIDESCORE_KEY_PASSWORD` | the key password you chose |
+
+The next push builds a signed release APK instead, and the release page says
+*"latest signed release build"* rather than *"latest debug build"*. Nothing
+else changes.
+
+Be honest with yourself about what this does and does not fix: it removes a
+strong negative signal, but Play Protect still blocks sideloaded accessibility
+apps on many devices regardless of who signed them. Only shipping through Play
+ends it.
+
 ## 3. Build the bundle
 
 Play takes an `.aab`, not an `.apk`:

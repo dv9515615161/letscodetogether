@@ -19,6 +19,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Secrets cannot be read inside an `if:`, so the check is hoisted here.
+    env:
+      HAS_KEYSTORE: ${{ secrets.RIDESCORE_KEYSTORE_BASE64 != '' }}
+
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -47,15 +51,52 @@ jobs:
         working-directory: ridescore
         run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
 
+      # A debug APK is signed with `androiddebugkey`, the certificate every
+      # Android developer's debug builds share, password "android". Play
+      # Protect weighs that heavily, and for an app declaring an accessibility
+      # service the result is the hard "App blocked to protect your device"
+      # dialog with no "Install anyway" on it. A release APK signed with the
+      # project's own key is a different signal, and is needed for Play in any
+      # case. So: release when the keystore secret exists, debug only until it
+      # does.
+      - name: Restore the release keystore
+        id: keystore
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.RIDESCORE_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "path=$RUNNER_TEMP/release.jks" >> "$GITHUB_OUTPUT"
+
+      - name: Build the signed release APK
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: ridescore
+        env:
+          RIDESCORE_KEYSTORE: ${{ steps.keystore.outputs.path }}
+          RIDESCORE_KEYSTORE_PASSWORD: ${{ secrets.RIDESCORE_KEYSTORE_PASSWORD }}
+          RIDESCORE_KEY_ALIAS: ${{ secrets.RIDESCORE_KEY_ALIAS }}
+          RIDESCORE_KEY_PASSWORD: ${{ secrets.RIDESCORE_KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
       - name: Build the debug APK
+        if: env.HAS_KEYSTORE != 'true'
         working-directory: ridescore
         run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Name the APK that was built
+        id: apk
+        run: |
+          if [ "$HAS_KEYSTORE" = "true" ]; then
+            echo "path=ridescore/app/build/outputs/apk/release/app-release.apk" >> "$GITHUB_OUTPUT"
+            echo "kind=signed release" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=ridescore/app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_OUTPUT"
+            echo "kind=debug" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload the APK as a build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ridescore-debug-apk
-          path: ridescore/app/build/outputs/apk/debug/app-debug.apk
+          name: ridescore-apk
+          path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
 
       - name: Upload the test report when something fails
@@ -75,14 +116,18 @@ jobs:
         run: |
           gh release delete ridescore-latest --yes --cleanup-tag || true
           gh release create ridescore-latest \
-            ridescore/app/build/outputs/apk/debug/app-debug.apk \
-            --title "RideScore (latest debug build)" \
+            "${{ steps.apk.outputs.path }}" \
+            --title "RideScore (latest ${{ steps.apk.outputs.kind }} build)" \
             --prerelease \
-            --notes "Debug build of RideScore, built automatically from commit ${GITHUB_SHA:0:7}.
+            --notes "${{ steps.apk.outputs.kind }} build of RideScore, from commit ${GITHUB_SHA:0:7}.
 
-          Download **app-debug.apk** below on your Android phone and tap it to install.
+          Download the APK below on your Android phone and tap it to install.
           Android 8.0 or newer. You will need to allow installs from your browser once.
 
           After installing, open RideScore and grant the two permissions on the Home tab
           (Accessibility, and Draw over other apps), then press *Analyse the sample offer*
-          to check it works."
+          to check it works.
+
+          If this says **debug build**, the repository has no release keystore yet, and
+          Play Protect will hard-block the install on Android 13 and newer. See
+          RELEASING.md for the four secrets that switch this to a signed release build."
