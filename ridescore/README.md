@@ -474,7 +474,8 @@ something else is holding it down. In rough order of likelihood:
   the answer on most newer Samsung devices.
 - **Xiaomi / Redmi / POCO.** *Settings ▸ Passwords & security ▸ System
   security* — turn off **Scan before installing** and, on HyperOS, **Enhanced
-  security**. MIUI also re-enables these after some updates.
+  security**. MIUI also re-enables these after some updates. Full sequence
+  below.
 - **Realme / OPPO / vivo / OnePlus.** *Settings ▸ Security / Security check* —
   turn off **Payment protection** or **App security check**.
 - **A managed or supervised phone.** A work profile, an employer's MDM, or
@@ -483,6 +484,39 @@ something else is holding it down. In rough order of likelihood:
   that is the cause, and the account holder has to allow the install.
 - **An out-of-date Play Store.** Play Store ▸ profile ▸ Settings ▸ About ▸
   *Update Play Store*, then reboot. A stale Play Services can grey the switch.
+
+#### Redmi / Xiaomi, step by step
+
+Two separate blockers, Google's and Xiaomi's, and MIUI turns its own back on
+after some updates. Labels move between MIUI 14 and HyperOS; look for the words
+rather than the exact path.
+
+1. **Settings ▸ Passwords & security ▸ System security** — turn off **Scan
+   before installing apps** (HyperOS may call it *Enhanced security*).
+2. **Settings ▸ Privacy protection ▸ Special permissions ▸ Install unknown
+   apps** — allow it for whichever app you are opening the APK from, usually
+   Files or Chrome.
+3. Install the APK. If Play Protect still objects, tap **More details ▸ Install
+   anyway**.
+
+Then three MIUI settings the app needs to actually *work*, none of which is
+obvious and all of which will make it look broken if missed:
+
+- **Autostart.** *Settings ▸ Apps ▸ Manage apps ▸ RideScore ▸ Autostart* — on.
+  Without it MIUI kills the accessibility service when you switch to Rapido,
+  which is precisely when it is needed.
+- **Display pop-up windows while running in the background.** *Settings ▸ Apps
+  ▸ Manage apps ▸ RideScore ▸ Other permissions*. This is a Xiaomi permission
+  separate from Android's *Display over other apps*, and the card cannot appear
+  from a background service without it. Grant both.
+- **Battery: No restrictions.** *Settings ▸ Apps ▸ Manage apps ▸ RideScore ▸
+  Battery saver ▸ No restrictions.* Then open Recents, swipe down on RideScore
+  and tap the padlock so MIUI stops closing it.
+
+If the card still never appears on a Xiaomi phone, check the Home tab's
+**Status** section: it names the last foreground package it saw. If Rapido
+never shows up there, the accessibility service is being killed and one of the
+three above is still off.
 
 Two routes that avoid the fight entirely:
 
