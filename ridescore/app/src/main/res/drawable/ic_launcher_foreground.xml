@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A green "go" ring with a rupee stroke: the decision, at a glance. -->
+    <path
+        android:fillColor="#33D17A"
+        android:pathData="M54,28c-14.36,0 -26,11.64 -26,26s11.64,26 26,26 26,-11.64 26,-26 -11.64,-26 -26,-26zM54,74c-11.05,0 -20,-8.95 -20,-20s8.95,-20 20,-20 20,8.95 20,20 -8.95,20 -20,20z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,43h16v4h-5.2c0.5,0.9 0.8,1.9 0.9,3H62v4h-4.3c-0.7,4.1 -4.2,7 -8.7,7l11,9h-6.2l-11,-9v-4h4.4c2.6,0 4.6,-1.2 5.2,-3H46v-4h6.4c-0.7,-1.8 -2.6,-3 -5.2,-3H46z" />
+</vector>

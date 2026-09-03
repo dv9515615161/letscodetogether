@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  RideScore reads text; it never acts.
+
+  There is deliberately no `canPerformGestures` and no
+  `flagRequestFilterKeyEvents` here: without them the service has no way to tap,
+  swipe, scroll or type in another app, which is exactly the guarantee this app
+  makes to its users.
+
+  `notificationTimeout` throttles content-change events at the framework level,
+  before they ever reach our process.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_service_description"
+    android:notificationTimeout="100"
+    android:settingsActivity="com.ridescore.app.MainActivity"
+    android:summary="@string/accessibility_service_summary" />
