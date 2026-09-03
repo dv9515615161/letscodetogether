@@ -125,6 +125,14 @@ class RideScoreAccessibilityService : AccessibilityService() {
                     pipeline.invalidateCache()
                 }
                 if (!settings.overlayEnabled) mainHandler.post { overlay?.hide() }
+                // Switched off mid-shift: drop the card and forget the last
+                // screen at once, rather than leaving a stale verdict sitting
+                // over Rapido until something else happens.
+                if (!settings.onDuty) {
+                    mainHandler.post { overlay?.hide() }
+                    notifier?.cancel()
+                    pipeline.clear()
+                }
             }
         }
 

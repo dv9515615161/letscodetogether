@@ -250,6 +250,23 @@ data class RideScoreSettings(
 
     // ---- Sources --------------------------------------------------------
     val appMode: AppMode = AppMode.BOTH,
+
+    /**
+     * The master switch: whether RideScore is working at all.
+     *
+     * When off it reads nothing. Not "reads and discards" - [watches] is the
+     * one gate every read passes through, so with this false the accessibility
+     * service returns before it ever asks Android for the window's contents.
+     * The screen is not looked at.
+     *
+     * It exists because a driver is not always driving. The app has a standing
+     * permission to read two apps' screens, and the honest thing is to make
+     * withdrawing that a single tap rather than a trip through Android's
+     * accessibility settings. There is a Quick Settings tile for exactly this,
+     * so it can be flipped from the notification shade without unlocking into
+     * the app.
+     */
+    val onDuty: Boolean = true,
     /**
      * OCR is off until the driver turns it on, because it needs an explicit
      * screen-capture consent from Android. Accessibility text is tried first,
@@ -425,7 +442,7 @@ data class RideScoreSettings(
     val runningCostPerKm: Double
         get() = fuelCostPerKm + if (maintenanceEnabled) maintenancePerKm else 0.0
 
-    fun watches(app: SourceApp): Boolean = appMode.includes(app)
+    fun watches(app: SourceApp): Boolean = onDuty && appMode.includes(app)
 
     fun sanitised(): RideScoreSettings = copy(
         mileageKmPerLitre = mileageKmPerLitre.coerceIn(5.0, 200.0),

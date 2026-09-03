@@ -95,6 +95,7 @@ class SettingsRepository(private val context: Context) {
             overlayAutoHideMillis = this[Keys.OVERLAY_AUTO_HIDE] ?: d.overlayAutoHideMillis,
             lockScreenNoticeEnabled = this[Keys.LOCK_SCREEN_NOTICE] ?: d.lockScreenNoticeEnabled,
             appMode = this[Keys.APP_MODE]?.let { runCatching { AppMode.valueOf(it) }.getOrNull() } ?: d.appMode,
+            onDuty = this[Keys.ON_DUTY] ?: d.onDuty,
             ocrFallbackEnabled = this[Keys.OCR_ON] ?: d.ocrFallbackEnabled,
             offerLogEnabled = this[Keys.OFFER_LOG] ?: d.offerLogEnabled,
             rideLogEnabled = this[Keys.RIDE_LOG] ?: d.rideLogEnabled,
@@ -147,6 +148,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.OVERLAY_AUTO_HIDE] = s.overlayAutoHideMillis
         this[Keys.LOCK_SCREEN_NOTICE] = s.lockScreenNoticeEnabled
         this[Keys.APP_MODE] = s.appMode.name
+        this[Keys.ON_DUTY] = s.onDuty
         this[Keys.OCR_ON] = s.ocrFallbackEnabled
         this[Keys.OFFER_LOG] = s.offerLogEnabled
         this[Keys.RIDE_LOG] = s.rideLogEnabled
@@ -197,6 +199,7 @@ class SettingsRepository(private val context: Context) {
         val OVERLAY_AUTO_HIDE = longPreferencesKey("overlay_auto_hide")
         val LOCK_SCREEN_NOTICE = booleanPreferencesKey("lock_screen_notice")
         val APP_MODE = stringPreferencesKey("app_mode")
+        val ON_DUTY = booleanPreferencesKey("on_duty")
         val OCR_ON = booleanPreferencesKey("ocr_fallback_enabled")
         val OFFER_LOG = booleanPreferencesKey("offer_log_enabled")
         val RIDE_LOG = booleanPreferencesKey("ride_log_enabled")

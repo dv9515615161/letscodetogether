@@ -59,6 +59,28 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
+        // First thing on the screen, because it is the thing most worth being
+        // able to find in a hurry.
+        SectionCard(
+            title = if (settings.onDuty) "Working" else "Off duty",
+            subtitle = if (settings.onDuty) {
+                "RideScore is reading Rapido and Uber offer screens. Nothing else, " +
+                    "and nothing leaves the phone."
+            } else {
+                "RideScore is not reading your screen at all. Turn it on when you " +
+                    "start a shift."
+            },
+        ) {
+            SwitchRow(
+                label = if (settings.onDuty) "Watching for offers" else "Not watching",
+                checked = settings.onDuty,
+                description = "Off means off: RideScore returns before it ever asks " +
+                    "Android what is on the screen. There is a Quick Settings tile for " +
+                    "this too - pull down the shade, edit the tiles, and add RideScore. " +
+                    "Then it is one tap from anywhere, without opening the app.",
+            ) { on -> onChange { it.copy(onDuty = on) } }
+        }
+
         SectionCard(
             title = "Setup",
             subtitle = "RideScore reads the offer screen and tells you what it is worth. " +

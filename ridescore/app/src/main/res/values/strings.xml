@@ -2,6 +2,12 @@
 <resources>
     <string name="app_name">RideScore</string>
 
+    <!-- Quick Settings tile: the master switch, one tap from the shade. -->
+    <string name="tile_on_duty">RideScore is watching Rapido and Uber. Tap to stop.</string>
+    <string name="tile_off_duty">RideScore is not reading your screen. Tap to start.</string>
+    <string name="tile_state_watching">Watching</string>
+    <string name="tile_state_off">Off</string>
+
     <string name="accessibility_service_label">RideScore offer reader</string>
     <string name="accessibility_service_summary">Reads the fare, distance and time on Rapido and Uber offer screens</string>
     <string name="accessibility_service_description">RideScore reads the text of ride offers shown by Rapido Captain and Uber Driver so it can tell you what an offer is worth per hour and per kilometre.\n\nIt only reads. It never accepts, declines, taps, swipes or scrolls anything for you, and it never reads any other app. Nothing it reads leaves your phone.</string>

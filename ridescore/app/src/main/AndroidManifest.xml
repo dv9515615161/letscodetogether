@@ -50,6 +50,20 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <!-- The master switch, reachable from the notification shade so a
+             driver can stop RideScore reading their screen without unlocking
+             into the app. -->
+        <service
+            android:name=".quicksettings.OnDutyTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_ridescore"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
         <!-- Lets the driver share their own ride log out through the share
              sheet. Grants read access to that one file, for that one action. -->
         <provider

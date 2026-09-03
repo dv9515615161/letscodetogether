@@ -203,6 +203,23 @@ no commission, so they say nothing about how commission behaves on a parcel —
 and an advisory tool that guesses a deduction away overstates what the work
 pays, which is the error that talks a driver into a bad ride.
 
+### Turning it off
+
+RideScore holds a standing permission to read two apps' screens, and a driver
+is not always driving. So there is a master switch, and **off means off**: the
+accessibility service returns before it ever asks Android what is on the
+screen. Nothing is read and discarded.
+
+It is the first card on the Home tab, and there is a **Quick Settings tile** —
+pull down the shade, edit the tiles, drag RideScore in. After that it is one
+tap from anywhere, without unlocking into the app, which is the only version of
+this that is any use at a signal in the sun.
+
+The switch is folded into `RideScoreSettings.watches()`, the single function the
+service consults before reading a window and the engine consults before parsing
+one. Putting it there is what makes the guarantee hold everywhere at once
+rather than in the places someone remembered to check.
+
 ### An estimated time is not a promise
 
 When an offer prints no duration RideScore estimates one — and an estimate made
