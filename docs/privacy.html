@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RideScore Privacy Policy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { max-width: 42rem; margin: 0 auto; padding: 2rem 1.25rem 4rem;
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .updated { color: #666; font-size: .9rem; margin-top: 0; }
+  ul { padding-left: 1.2rem; }
+  code { background: rgba(128,128,128,.15); padding: .1em .35em; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>RideScore Privacy Policy</h1>
+<p class="updated">Last updated: 29 August 2026</p>
+
+<p>RideScore reads ride offers shown by Rapido Captain and Uber Driver and tells the
+driver what an offer is worth per hour and per kilometre. This policy describes
+exactly what the app accesses and what happens to it.</p>
+
+<p><strong>The short version: nothing leaves your phone.</strong> RideScore does not
+request the Android internet permission, so it is technically incapable of sending
+your data anywhere.</p>
+
+<h2>What the app accesses</h2>
+<ul>
+  <li><strong>Screen text from two apps only.</strong> Through Android's
+      AccessibilityService, RideScore reads the text of the foreground screen when
+      that app is Rapido Captain or Uber Driver: fare, distances, times, and pickup
+      and drop addresses. The package of the app in front is checked before any
+      screen content is requested, so no other app's screen is read.</li>
+  <li><strong>Screen pixels, only if you switch on the OCR fallback.</strong> This is
+      off by default. When on, and only when the offer text cannot be read directly,
+      the app captures one frame and recognises text on it using an on-device model.
+      Android shows its own recording indicator while this is active. Captured frames
+      are held in memory, read, and discarded immediately.</li>
+  <li><strong>The settings you enter</strong> — mileage, petrol price, thresholds.</li>
+</ul>
+
+<h2>What is stored, and where</h2>
+<ul>
+  <li><strong>Your settings</strong>, in the app's private storage on the device.</li>
+  <li><strong>The ride log, only if you switch it on.</strong> Off by default. When on,
+      each offer seen is appended to a CSV file in the app's private storage, which
+      no other app can read. It is capped in size and trimmed automatically. It leaves
+      your phone only if you press Export and choose where to send it. You can delete
+      it at any time from Settings.</li>
+</ul>
+<p>Nothing else is written to disk. Screen text that is not logged exists only in
+memory while an offer is being scored.</p>
+
+<h2>What is never collected</h2>
+<ul>
+  <li>No account, sign-in, name, phone number or email.</li>
+  <li>No location. RideScore does not request location permission.</li>
+  <li>No analytics, telemetry, crash reporting or advertising identifiers.</li>
+  <li>No screenshots are saved.</li>
+  <li>No data is sold, shared or transmitted to us or to anyone else.</li>
+</ul>
+
+<h2>What the app cannot do</h2>
+<p>RideScore never accepts, declines, taps, swipes or scrolls anything in Rapido or
+Uber. Its accessibility service is declared without the ability to perform actions in
+other apps, so this is enforced by the Android configuration rather than only
+promised here. Every decision is the driver's.</p>
+
+<h2>Permissions and why</h2>
+<ul>
+  <li><strong>Accessibility service</strong> — to read the offer text. This is the
+      app's core function and there is no other way to do it. You enable it yourself
+      in Android Settings and can revoke it there at any time.</li>
+  <li><strong>Display over other apps</strong> — to show the floating advisory card.</li>
+  <li><strong>Notifications</strong> — to show the verdict when the card cannot be
+      drawn, such as on the lock screen.</li>
+  <li><strong>Foreground service / media projection</strong> — only used by the
+      optional OCR fallback, which Android requires to run as a foreground service.</li>
+  <li><strong>No internet permission</strong> is requested.</li>
+</ul>
+
+<h2>Children</h2>
+<p>RideScore is a tool for working drivers and is not directed at children.</p>
+
+<h2>Changes</h2>
+<p>If a future version adds any feature that sends data off the device, it will be
+opt-in, this policy will be updated before that version ships, and the change will be
+described in the app.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: <a href="mailto:dv9515615161@gmail.com">dv9515615161@gmail.com</a></p>
+
+</body>
+</html>
