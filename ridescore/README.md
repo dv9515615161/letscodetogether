@@ -547,41 +547,85 @@ Two routes that avoid the fight entirely:
 - **Ship it through Play internal testing.** See [RELEASING.md](RELEASING.md).
   Up to 100 testers, live in minutes, and an app installed from Play is never
   blocked on any make of phone.
-#### Installing over USB from a Mac
+#### Installing over USB from a Mac, from nothing
 
-No Android Studio needed — about ten minutes, and it works on every make of
-phone regardless of which scanner is objecting.
+No Android Studio and no Homebrew. About fifteen minutes the first time, one
+command every time after.
 
-**On the phone, once:**
+**1. Get the two files onto the Mac.**
 
-1. *Settings ▸ About phone* — tap **Build number** (on iQOO, *Software version
-   ▸ Version*) seven times, until it says you are a developer.
-2. *Settings ▸ System ▸ Developer options* — turn on **USB debugging**, and
-   **Install via USB** if the phone has it.
+- The APK: open the repository's **Releases** page in Safari and download
+  `app-debug.apk`. It lands in `~/Downloads`.
+- The tools: download **SDK Platform-Tools for Mac** from
+  <https://developer.android.com/tools/releases/platform-tools>. Safari unzips
+  it for you, leaving a `platform-tools` folder in `~/Downloads`.
 
-**On the Mac, once:**
+**2. Open Terminal.** Press **⌘ + Space**, type `terminal`, press Return. A
+window with a text prompt appears. Everything below is typed there, one line at
+a time, pressing Return after each.
 
-```bash
-brew install --cask android-platform-tools
-```
-
-No Homebrew? Download "SDK Platform-Tools for Mac" from
-<https://developer.android.com/tools/releases/platform-tools>, unzip it, and
-run `./adb` from inside that folder instead of `adb`.
-
-**Then, each time:**
+**3. Go into the tools folder and clear macOS's quarantine flag.**
 
 ```bash
-adb devices          # phone shows a prompt - tick "always allow", tap OK
-adb install -r ~/Downloads/app-debug.apk
+cd ~/Downloads/platform-tools
+xattr -dr com.apple.quarantine .
 ```
 
-`Success` means it is on. `INSTALL_FAILED_UPDATE_INCOMPATIBLE` means an older
-build signed with a different key is still there — `adb uninstall
-com.ridescore.app` first, which also wipes its settings and logs.
+The second line matters. macOS marks anything downloaded from the internet, and
+without clearing it you get *"adb cannot be opened because the developer cannot
+be verified"* and a dead end. Neither command prints anything when it works —
+on a Mac, silence is success.
 
-If even this is refused, the phone is enforcing an install policy beyond Play
-Protect, and Play internal testing is the only remaining route.
+**4. Turn on developer mode on the phone.**
+
+- *Settings ▸ About phone ▸ Software version* — tap it **seven times**. It will
+  say you are now a developer.
+- *Settings ▸ System ▸ Developer options* — turn on **USB debugging**, and
+  **Install via USB** as well if the phone lists it. On vivo and iQOO, *Install
+  via USB* sometimes insists you sign in to a vivo account and put a SIM in
+  first; that is Funtouch OS, not something you did wrong.
+
+**5. Plug the phone into the Mac** — and use a cable that carries data. Many
+charging cables, especially the ones bundled with power banks, have no data
+wires at all and the phone will simply never appear. If nothing shows up in the
+next step, try a different cable before anything else.
+
+**6. Check the Mac can see it.**
+
+```bash
+./adb devices
+```
+
+The phone shows a prompt: *Allow USB debugging?* Tick **Always allow from this
+computer** and tap **OK**. Run the command again and you want:
+
+```
+List of devices attached
+XXXXXXXX	device
+```
+
+`unauthorized` means the prompt was not accepted yet. An empty list means the
+cable, or *USB debugging* still off.
+
+**7. Install.**
+
+```bash
+./adb install -r ~/Downloads/app-debug.apk
+```
+
+A few seconds, then `Success`. The app is on the phone — no Play Protect
+dialog, because this never goes through the installer that raises it.
+
+**Next time** it is only steps 5 and 7: plug in, one command.
+
+**When it does not work**
+
+| What it says | What it means |
+|---|---|
+| `adb: command not found` | You are not in the folder. Run `cd ~/Downloads/platform-tools` again, and keep the `./` in front. |
+| `INSTALL_FAILED_UPDATE_INCOMPATIBLE` | An older build with a different signing key is installed. `./adb uninstall com.ridescore.app` first — this also wipes its settings and logs. |
+| `INSTALL_FAILED_USER_RESTRICTED` | *Install via USB* is off in Developer options. On vivo/iQOO see step 4. |
+| `no devices/emulators found` | Cable, or the prompt in step 6 was never accepted. |
 
 #### Why no code change fixes this
 
