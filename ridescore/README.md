@@ -493,8 +493,11 @@ something else is holding it down. In rough order of likelihood:
   security* — turn off **Scan before installing** and, on HyperOS, **Enhanced
   security**. MIUI also re-enables these after some updates. Full sequence
   below.
-- **Realme / OPPO / vivo / OnePlus.** *Settings ▸ Security / Security check* —
-  turn off **Payment protection** or **App security check**.
+- **Realme / OPPO / vivo / iQOO / OnePlus.** *Settings ▸ Security & privacy ▸
+  More security settings* — turn off **Install security check** / **App
+  security check**, and on Funtouch OS check the **i Manager** app too, which
+  keeps its own scanner. An iQOO Z9x 5G shows the same hard block as a Redmi,
+  from a different scanner.
 - **A managed or supervised phone.** A work profile, an employer's MDM, or
   Family Link supervision locks the toggle and no OEM setting will free it.
   Check **Settings ▸ Security ▸ Device admin apps**. If something is listed,

@@ -15,6 +15,31 @@ this as the order to do things in.
 
 ---
 
+## Internal testing is the short answer
+
+**The 12-testers-for-14-days rule is for *production* access. It is not needed
+to put the app on a phone.**
+
+Play has four tracks — internal, closed, open, production — and the internal
+one takes up to 100 testers, goes live in minutes rather than after a review,
+and is available as soon as the developer account is verified. An app installed
+from *any* Play track, internal included, comes from the Play Store, so Play
+Protect never objects, on any make of phone.
+
+So the realistic first goal is not "launch". It is:
+
+> **Account verified → upload the .aab to internal testing → send yourself and
+> a few drivers the opt-in link → install from Play like a normal app.**
+
+Days, not weeks, and it ends the sideloading problem outright — no Auto
+Blocker, no MIUI scanner, no Funtouch scanner, no greyed-out toggle, and no
+per-OEM instructions for every driver you hand it to. Production and its 14-day
+closed test can follow whenever; the app is already working on real phones by
+then.
+
+Verify the current rules in the Console as you go — this is the part of Play
+policy that moves most.
+
 ## The shortest path
 
 Most of what makes this feel like a hassle is doing it in the wrong order and
@@ -45,8 +70,14 @@ Collect the Google account email each of them uses on their phone.
 
 **Day 2–3, once verification clears.** Create the app, paste the listing from
 [PLAY_LISTING.md](PLAY_LISTING.md) — name, short and full description,
-accessibility declaration, data-safety answers, all written — upload the
-`.aab` from §3, and start the closed test with those 12 emails.
+accessibility declaration, data-safety answers, all written — and upload the
+`.aab` from §3 to **internal testing** first. Add your own account as a tester,
+open the opt-in link on the phone, install from Play. That is the sideloading
+problem over with, on every device at once.
+
+Then start the closed test with the 12 emails, which is what the 14-day clock
+needs. Internal and closed testing run side by side; the internal track is what
+you and the drivers actually install from meanwhile.
 
 **Then wait 14 days.** Keep the testers opted in; the clock restarts if the
 count drops. Use the fortnight to fix whatever the drivers report, pushing new
@@ -56,8 +87,8 @@ builds to the same closed track. That is what the fortnight is *for*.
 an accessibility app is slower than average — allow a week and do not plan
 anything around a specific date.
 
-Realistically: **about three weeks from paying the fee**, nearly all of it
-waiting rather than working. An organisation account skips the 14-day test but
+Realistically: **a few days to a working install from Play**, and about three
+weeks to production, nearly all of it waiting rather than working. An organisation account skips the 14-day test but
 needs a D-U-N-S number for a registered business, which is its own delay unless
 you already have one.
 
