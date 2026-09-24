@@ -494,10 +494,11 @@ something else is holding it down. In rough order of likelihood:
   security**. MIUI also re-enables these after some updates. Full sequence
   below.
 - **Realme / OPPO / vivo / iQOO / OnePlus.** *Settings ▸ Security & privacy ▸
-  More security settings* — turn off **Install security check** / **App
-  security check**, and on Funtouch OS check the **i Manager** app too, which
-  keeps its own scanner. An iQOO Z9x 5G shows the same hard block as a Redmi,
-  from a different scanner.
+  **App security*** — on an iQOO Z9x this is the row flagged *"The current
+  system environment is at risk"*, and it holds the install scan. Also check
+  **Scam guard** on the same page. It is **not** under *More security
+  settings*, which on Funtouch OS 15 holds only screen-lock and device-admin
+  items.
 - **A managed or supervised phone.** A work profile, an employer's MDM, or
   Family Link supervision locks the toggle and no OEM setting will free it.
   Check **Settings ▸ Security ▸ Device admin apps**. If something is listed,
@@ -540,15 +541,61 @@ three above is still off.
 
 Two routes that avoid the fight entirely:
 
-- **Install over USB from the Mac.** `adb install -r ridescore.apk` goes
-  through a different installer path and is usually not blocked. It needs
-  Developer options ▸ USB debugging on the phone, and the platform-tools
-  package on the Mac.
-- **Ship it through Play internal testing.** A one-time developer account fee,
-  and then testers install from the Play Store itself, so Play Protect never
-  objects on any device. See [RELEASING.md](RELEASING.md). This is the only
-  approach that scales past your own phone: every new device is another round
-  of this, and on a managed phone there is no round to win.
+- **Install over USB from the Mac.** The reliable one. `adb` uses a different
+  installer path from the one Play Protect's block sits on, so it goes through
+  where tapping the APK does not. Full walkthrough below.
+- **Ship it through Play internal testing.** See [RELEASING.md](RELEASING.md).
+  Up to 100 testers, live in minutes, and an app installed from Play is never
+  blocked on any make of phone.
+#### Installing over USB from a Mac
+
+No Android Studio needed — about ten minutes, and it works on every make of
+phone regardless of which scanner is objecting.
+
+**On the phone, once:**
+
+1. *Settings ▸ About phone* — tap **Build number** (on iQOO, *Software version
+   ▸ Version*) seven times, until it says you are a developer.
+2. *Settings ▸ System ▸ Developer options* — turn on **USB debugging**, and
+   **Install via USB** if the phone has it.
+
+**On the Mac, once:**
+
+```bash
+brew install --cask android-platform-tools
+```
+
+No Homebrew? Download "SDK Platform-Tools for Mac" from
+<https://developer.android.com/tools/releases/platform-tools>, unzip it, and
+run `./adb` from inside that folder instead of `adb`.
+
+**Then, each time:**
+
+```bash
+adb devices          # phone shows a prompt - tick "always allow", tap OK
+adb install -r ~/Downloads/app-debug.apk
+```
+
+`Success` means it is on. `INSTALL_FAILED_UPDATE_INCOMPATIBLE` means an older
+build signed with a different key is still there — `adb uninstall
+com.ridescore.app` first, which also wipes its settings and logs.
+
+If even this is refused, the phone is enforcing an install policy beyond Play
+Protect, and Play internal testing is the only remaining route.
+
+#### Why no code change fixes this
+
+The dialog says *"This app can request access to sensitive data"*. That is
+Play Protect reacting to the **accessibility service** — the permission
+RideScore needs to read the offer screen at all, and the one Android banking
+malware abuses most. It is a judgement about the category, not about anything
+found in this app, and it cannot be engineered around without removing the
+feature the app exists for.
+
+Signing the APK with a real release key removes a separate negative signal and
+is worth doing. It is not a cure. Every new device is another round of this,
+and on a managed phone there is no round to win — which is the argument for
+spending the developer account fee rather than another evening in Settings.
 
 ### The Accessibility switch is greyed out
 
